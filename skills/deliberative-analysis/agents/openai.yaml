@@ -1,0 +1,3 @@
+display_name: Deliberative Analysis
+short_description: Slow down design reasoning, challenge framing, and find non-obvious alternatives before deciding.
+default_prompt: Use deliberative-analysis to reframe the problem, compare A/B/A+B with non-obvious alternatives, identify flip conditions, and decide whether to escalate to agent-arena.

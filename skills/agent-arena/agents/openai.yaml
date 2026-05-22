@@ -1,0 +1,3 @@
+display_name: Agent Arena
+short_description: Heterogeneous multi-agent debate, evidence checking, red-team review, and judge protocol.
+default_prompt: Use agent-arena to run a heterogeneous review with independent analysis, evidence checks, critique, dissent preservation, and degraded-mode disclosure when counterpart agents are unavailable.
