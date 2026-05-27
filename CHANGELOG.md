@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.1.2
+
+- Clarify Claude Code print-mode `--max-turns` counts tool interaction turns, so Read/Glob/Grep exploration can exhaust low caps before a final answer.
+- Add retry guidance for `error_max_turns`: raise the cap, narrow the approved scope, or pass a no-tools local summary instead of treating it as a substantive arena answer.
+
 ## v0.1.1
 
 - Clarify Codex should discover Claude Code through the external `claude` CLI before falling back to same-model subagents.

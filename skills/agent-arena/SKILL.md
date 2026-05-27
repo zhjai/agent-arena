@@ -1,7 +1,7 @@
 ---
 name: agent-arena
 description: Use when complex AI agent work needs heterogeneous multi-agent debate, red teaming, evidence checking, judging, or synthesis across Codex, Claude Code, Hermes, OpenClaw, and other coding agents.
-version: 0.1.1
+version: 0.1.2
 author: zhjai
 license: MIT
 metadata:
@@ -100,9 +100,20 @@ command -v claude && claude --version
 
 If callable and the task is not explicitly constrained to local-only/private-only context, run Claude Code in print mode with a compact task packet and read-only access to the approved worktree. Context minimization means “do not pre-send everything”; it does **not** mean forbidding Claude Code from reading necessary files. Prefer `--allowedTools 'Read,Glob,Grep'` for review/analysis; add `Bash` only when deterministic commands such as tests, lint, or dependency inspection are explicitly allowed.
 
+Choose the Claude Code `--max-turns` budget based on how much file/tool exploration Claude must do. `--max-turns` limits agent/tool interaction turns, not final-answer attempts; each Read/Glob/Grep/Bash loop consumes turns. For repo-scoped design or pipeline analysis, a low cap such as 6 can fail with `error_max_turns` before Claude has summarized anything. Use one of these patterns:
+
 ```bash
-claude -p '<ArenaTaskPacket, approved scope, and role instructions>' --allowedTools 'Read,Glob,Grep' --max-turns 6
+# Minimal context, no tools: good when Codex already extracted the relevant summary.
+claude -p '<ArenaTaskPacket plus local summary; no file reads needed>' --allowedTools '' --max-turns 2 --output-format json
+
+# Read-only repo/doc review: allow enough turns for Glob/Grep/Read exploration.
+claude -p '<ArenaTaskPacket, approved scope, and role instructions>' --allowedTools 'Read,Glob,Grep' --max-turns 12 --output-format json
+
+# Larger or ambiguous codebase review: raise the cap or narrow the scope first.
+claude -p '<ArenaTaskPacket with exact directories/files and exclusions>' --allowedTools 'Read,Glob,Grep' --max-turns 20 --output-format json
 ```
+
+If Claude returns JSON with `subtype: error_max_turns`, do **not** treat that as Claude Code being unavailable or as a substantive arena answer. Retry once with either (a) a higher turn cap and narrower approved scope, or (b) no tools plus a Codex-generated local summary. Disclose the retry/degraded continuity if it affects confidence.
 
 For sensitive/private repositories, do not send or allow access to datasets, result files, secrets, private logs, or unrelated proprietary directories without explicit approval. If approval is missing, ask for approval or run a degraded local arena and disclose it.
 
@@ -320,7 +331,8 @@ If degraded:
 - Run the task as Codex.
 - Invite Claude Code as default counterpart when available and allowed.
 - Do not assume Claude Code is unavailable merely because it is not listed as a Codex built-in subagent. If shell/Bash is available, check `command -v claude && claude --version` before downgrading.
-- If Claude Code is callable and context sharing is allowed, call it via print mode with a compact task packet and approved read-only repo scope: `claude -p '<ArenaTaskPacket + approved scope>' --allowedTools 'Read,Glob,Grep' --max-turns 6`.
+- If Claude Code is callable and context sharing is allowed, call it via print mode with a compact task packet and approved read-only repo scope. Use a realistic `--max-turns` budget: `--max-turns` counts Claude/tool interaction turns, so `Read`/`Glob`/`Grep` exploration can exhaust low caps before a final answer. Prefer `--max-turns 12` for ordinary read-only repo review, higher or narrower scope for larger reviews, and `--allowedTools '' --max-turns 2` only when Codex has already supplied a sufficient local summary.
+- If Claude Code returns `error_max_turns`, do not count it as a failed participant or final critique. Retry once with a higher cap/narrower scope or a no-tools summary prompt, then disclose any degraded continuity.
 - Do not over-redact into uselessness: Claude Code may read relevant source files, configs, tests, docs, and dependency manifests when needed; exclude secrets, datasets, generated results, private logs, and unrelated directories unless explicitly approved.
 - For non-trivial arenas, run at least two interaction rounds with Claude Code: independent answer, then critique/revision based on Codex's extracted disagreements and evidence questions. If the user asks to design/build a solution together, use `collaborative_design`: have Claude Code act as co-designer/architecture partner, not merely reviewer.
 - Use Codex strengths for source inspection, tests, CLI checks, implementation feasibility, and structured diffs.
