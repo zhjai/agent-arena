@@ -95,7 +95,7 @@ cp -R agent-arena/skills/deliberative-analysis "${CODEX_HOME:-$HOME/.codex}/skil
 Then start a new Codex session and ask:
 
 ```text
-Use agent-arena. You are Codex; invite Claude Code as the heterogeneous counterpart if it is installed, authenticated, and callable. Otherwise disclose degraded mode.
+Use agent-arena. You are Codex; invite Claude Code as the heterogeneous counterpart if it is installed, authenticated, and callable. If shell access exists, first check `command -v claude && claude --version`; do not treat absence from built-in subagent tools as absence of Claude Code. Start with a compact task packet, but allow Claude Code to read relevant source/docs/tests inside the approved repo scope when needed. Exclude secrets, datasets, generated results, private logs, and unrelated directories unless explicitly approved. For non-trivial work, run multi-round critique/revision instead of one-shot. If the task is to design/build something together, use `collaborative_design` and treat Claude Code as co-designer/architecture partner rather than only reviewer. Otherwise disclose degraded mode.
 ```
 
 ### Hermes Agent
@@ -129,8 +129,8 @@ If your agent has a custom skills directory, copy the full skill folders there. 
 
 ## Default cross-agent rule
 
-- When running inside **Codex**, invite **Claude Code** by default **if available and allowed**.
-- When running inside **Claude Code**, invite **Codex** by default **if available and allowed**.
+- When running inside **Codex**, invite **Claude Code** by default **if available and allowed**. If shell access exists, Codex should check `command -v claude && claude --version` before falling back to same-model subagents; the external `claude` CLI counts as the heterogeneous counterpart even if it is not exposed as a built-in Codex agent tool. Context minimization should not block useful review: allow Claude Code to read relevant source/docs/tests within the approved repo scope, while excluding secrets, datasets, generated results, private logs, and unrelated directories unless explicitly approved. For non-trivial arenas, run multi-round critique/revision rather than a single one-shot call. If the user asks to design/build something together, use `collaborative_design` and make Claude Code a co-designer/architecture partner, not merely a reviewer.
+- When running inside **Claude Code**, invite **Codex** by default **if available and allowed**. If shell access exists, check `command -v codex && codex --version` before falling back.
 - When running inside **Hermes Agent**, **OpenClaw**, or another orchestrator, include both Codex and Claude Code by default if available.
 - If a counterpart is unavailable, disclose the degraded mode instead of pretending same-model roleplay is equivalent.
 - If the task involves private or sensitive material, get permission and minimize/redact context before sending it to another agent or service.
@@ -166,6 +166,7 @@ Agent Arena supports these modes:
 - `solo_red_team` — one agent performs structured self-critique when no heterogeneous counterpart is available.
 - `quick_panel` — short independent opinions from available agents, with limited evidence checking.
 - `design_debate` — compare design alternatives with critique and synthesis.
+- `collaborative_design` — Codex and Claude Code co-design architectures, APIs, experiments, or implementation plans through multiple rounds.
 - `deliberative_analysis` — expand option space and avoid premature convergence.
 - `evidence_arena` — claims require web, docs, source, test, or benchmark evidence.
 - `red_team` — adversarially challenge a design, plan, prompt, benchmark, or safety assumption.
