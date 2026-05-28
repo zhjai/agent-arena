@@ -1,10 +1,17 @@
 # Agent Arena
 
-[![Skill](https://img.shields.io/badge/skill-AI%20agents-blue)](#installation)
-[![Claude Code](https://img.shields.io/badge/Claude%20Code-portable%20skill-6b46c1)](#claude-code)
-[![OpenAI Codex](https://img.shields.io/badge/OpenAI%20Codex-portable%20skill-111827)](#openai-codex)
-[![Hermes Agent](https://img.shields.io/badge/Hermes%20Agent-skill-059669)](#hermes-agent)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+<p align="center">
+  <img src="assets/banner.svg" alt="Agent Arena — portable multi-agent debate skill" width="100%">
+</p>
+
+<p align="center">
+  <a href="#installation"><img src="https://img.shields.io/badge/skill-agent--arena-blue" alt="skill"></a>
+  <a href="#claude-code"><img src="https://img.shields.io/badge/Claude%20Code-portable%20skill-6b46c1" alt="Claude Code"></a>
+  <a href="#openai-codex"><img src="https://img.shields.io/badge/OpenAI%20Codex-portable%20skill-111827" alt="OpenAI Codex"></a>
+  <a href="#hermes-agent"><img src="https://img.shields.io/badge/Hermes%20Agent-skill-059669" alt="Hermes Agent"></a>
+  <img src="https://img.shields.io/badge/version-0.1.3-informational" alt="version">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License"></a>
+</p>
 
 **Get a real second opinion on high-stakes code and architecture decisions.** Agent Arena makes Codex and Claude Code analyze your problem independently, critique each other's reasoning, verify evidence, and preserve dissent — instead of one agent confidently giving you one answer.
 
@@ -22,17 +29,26 @@ This project is not affiliated with Anthropic, OpenAI, Hermes Agent, OpenClaw, O
 
 **Scenario:** Architecture decision — "PostgreSQL or DynamoDB for our auth service?"
 
-**Codex (independent):** PostgreSQL. Auth access patterns are relational (user → roles → permissions), joins are frequent, ACID guarantees prevent partial permission updates. DynamoDB's single-table design adds complexity with no throughput benefit at auth scale.
+**Step 1 — Independent analysis (no anchoring):**
 
-**Claude Code (independent):** DynamoDB. Auth is read-heavy with known key patterns (user_id lookup), eventual consistency is acceptable for permission caching, and serverless elasticity avoids ops overhead at scale.
+<table>
+<tr>
+<th width="50%">Codex</th>
+<th width="50%">Claude Code</th>
+</tr>
+<tr>
+<td>PostgreSQL. Auth access patterns are relational (user → roles → permissions), joins are frequent, ACID guarantees prevent partial permission updates. DynamoDB's single-table design adds complexity with no throughput benefit at auth scale.</td>
+<td>DynamoDB. Auth is read-heavy with known key patterns (user_id lookup), eventual consistency is acceptable for permission caching, and serverless elasticity avoids ops overhead at scale.</td>
+</tr>
+</table>
 
-**Cross-critique:** Codex challenges Claude's "eventual consistency is acceptable" claim — auth permission checks need linearizable reads or you risk stale permission grants. Claude Code revises: agreed for permission writes; DynamoDB strongly-consistent reads help for single-region tables, but global tables remain eventually consistent — a caveat Claude's initial answer missed.
+**Step 2 — Cross-critique:** Codex challenges Claude's "eventual consistency is acceptable" claim — auth permission checks need linearizable reads or you risk stale permission grants. Claude Code revises: agreed for permission writes; DynamoDB strongly-consistent reads help for single-region tables, but global tables remain eventually consistent — a caveat Claude's initial answer missed.
 
-**Synthesis:** PostgreSQL for complex permission hierarchies; DynamoDB for simpler flat-permission models where you control the consistency trade-offs and have verified single-region deployment. Key assumption to verify first: what is your actual auth query pattern and deployment topology?
+**Step 3 — Synthesis:** PostgreSQL for complex permission hierarchies; DynamoDB for simpler flat-permission models where you control the consistency trade-offs and have verified single-region deployment. Key assumption to verify first: what is your actual auth query pattern and deployment topology?
 
 **Dissent preserved:** Codex maintains DynamoDB's operational complexity and consistency edge cases are underweighted in Claude's analysis.
 
-*This is a condensed illustration of the output format. Real arena runs produce longer evidence ledgers with source citations.*
+*Condensed illustration. Real arena runs include evidence ledgers with source citations, claim extraction, and blind judge scores.*
 
 ---
 
