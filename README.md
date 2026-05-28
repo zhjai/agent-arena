@@ -6,13 +6,35 @@
 [![Hermes Agent](https://img.shields.io/badge/Hermes%20Agent-skill-059669)](#hermes-agent)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**Agent Arena is a portable protocol skill for heterogeneous multi-agent debate, red-team review, evidence checking, and LLM-as-a-judge workflows.**
+**Get a real second opinion on high-stakes code and architecture decisions.** Agent Arena makes Codex and Claude Code analyze your problem independently, critique each other's reasoning, verify evidence, and preserve dissent — instead of one agent confidently giving you one answer.
 
-It is designed for agents and orchestrators such as **Claude Code, OpenAI Codex, Hermes Agent, OpenClaw, OpenCode, Copilot CLI, and other AI coding agents** when they support custom skills, custom instructions, or tool-driven delegation.
+Best for: architecture decisions · implementation plan review · PR review before merge · bug root-cause analysis · RAG claim verification · any decision where single-model overconfidence is a risk.
+
+Not for: simple factual lookups · formatting · routine small edits.
+
+It is designed for **Claude Code, OpenAI Codex, Hermes Agent, OpenClaw, OpenCode, Copilot CLI, and other AI coding agents** that support custom skills, custom instructions, or tool-driven delegation.
 
 > **Important:** this repository is a protocol/instruction skill, not an executable orchestrator. It does not install, authenticate, or automatically call Codex, Claude Code, or any other agent. Cross-agent execution depends on the host agent, local CLI availability, authentication, sandbox permissions, network access, and user approval for sensitive data.
 
 This project is not affiliated with Anthropic, OpenAI, Hermes Agent, OpenClaw, OpenCode, or GitHub Copilot.
+
+## What it produces
+
+**Scenario:** Architecture decision — "PostgreSQL or DynamoDB for our auth service?"
+
+**Codex (independent):** PostgreSQL. Auth access patterns are relational (user → roles → permissions), joins are frequent, ACID guarantees prevent partial permission updates. DynamoDB's single-table design adds complexity with no throughput benefit at auth scale.
+
+**Claude Code (independent):** DynamoDB. Auth is read-heavy with known key patterns (user_id lookup), eventual consistency is acceptable for permission caching, and serverless elasticity avoids ops overhead at scale.
+
+**Cross-critique:** Codex challenges Claude's "eventual consistency is acceptable" claim — auth permission checks need linearizable reads or you risk stale permission grants. Claude Code revises: agreed for permission writes; DynamoDB strongly-consistent reads help for single-region tables, but global tables remain eventually consistent — a caveat Claude's initial answer missed.
+
+**Synthesis:** PostgreSQL for complex permission hierarchies; DynamoDB for simpler flat-permission models where you control the consistency trade-offs and have verified single-region deployment. Key assumption to verify first: what is your actual auth query pattern and deployment topology?
+
+**Dissent preserved:** Codex maintains DynamoDB's operational complexity and consistency edge cases are underweighted in Claude's analysis.
+
+*This is a condensed illustration of the output format. Real arena runs produce longer evidence ledgers with source citations.*
+
+---
 
 ## Why this exists
 
@@ -66,8 +88,6 @@ After copying, restart or reload your agent session so it rescans skills. Exact 
 
 ### Claude Code
 
-Copy one or both skills into your Claude Code skills directory:
-
 ```bash
 git clone https://github.com/zhjai/agent-arena.git
 mkdir -p ~/.claude/skills
@@ -75,11 +95,13 @@ cp -R agent-arena/skills/agent-arena ~/.claude/skills/
 cp -R agent-arena/skills/deliberative-analysis ~/.claude/skills/
 ```
 
-Then start a new Claude Code session and ask:
+Start a new Claude Code session and verify the skill loaded:
 
 ```text
-Use agent-arena to have Claude Code and Codex independently review this architecture decision. If Codex is unavailable, disclose degraded mode.
+Use agent-arena to red-team this decision: [your question here]
 ```
+
+Or trigger it with natural language — agent-arena activates on phrases like "second opinion", "independent review", "red-team my plan", or "let Codex and Claude review this".
 
 ### OpenAI Codex
 

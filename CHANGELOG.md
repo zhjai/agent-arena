@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.1.3
+
+- Rewrite `agent-arena` skill description to use user-intent trigger phrases ("second opinion", "independent review", "red-team", "Codex-vs-Claude debate") instead of implementation terminology, improving LLM-based skill auto-triggering.
+- Add "What it produces" section to README with a concrete Codex-vs-Claude example output showing independent analysis, cross-critique, synthesis, and preserved dissent.
+- Improve README opening to lead with the result ("get a real second opinion") rather than the mechanism.
+- Add natural-language trigger guidance to the Claude Code install section.
+- Add unhyphenated and conversational trigger variants to description: "red team", "sanity check", "review my plan", "challenge this design".
+- Fix README demo example: remove unsupported `~10k req/s` threshold, add DynamoDB global table consistency caveat, label output as condensed illustration.
+
 ## v0.1.2
 
 - Clarify Claude Code print-mode `--max-turns` counts tool interaction turns, so Read/Glob/Grep exploration can exhaust low caps before a final answer.

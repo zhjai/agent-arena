@@ -1,7 +1,7 @@
 ---
 name: agent-arena
-description: Use when complex AI agent work needs heterogeneous multi-agent debate, red teaming, evidence checking, judging, or synthesis across Codex, Claude Code, Hermes, OpenClaw, and other coding agents.
-version: 0.1.2
+description: Use when the user asks for a second opinion, independent review, sanity check, architecture red-team, red team critique, Codex-vs-Claude debate, review my plan, challenge this design, evidence-checked code or PR review, or multi-agent critique of a high-stakes implementation plan, design decision, research claim, or bug root-cause hypothesis. Do not use for simple lookups, formatting, or low-stakes one-step tasks.
+version: 0.1.3
 author: zhjai
 license: MIT
 metadata:
