@@ -251,7 +251,12 @@ AI agent skill · Claude Code skill · OpenAI Codex skill · Hermes Agent skill 
 
 ## 版本说明
 
-当前发布线：`v0.1.x` 预览版。待正式 tag 发布后可固定到 git tag 以获得可复现安装，或使用 `main` 获取最新草稿。
+当前发布线：`v0.1.x` 预览版。各版本 tag 已在 [Releases 页面](https://github.com/zhjai/agent-arena/releases)发布——可固定到某个 tag 以获得可复现安装，或跟踪 `main` 获取尚未发布的最新改动。
+
+```bash
+# 固定到指定版本（把 v0.1.4 换成你想要的 tag）
+git clone --branch v0.1.4 https://github.com/zhjai/agent-arena.git
+```
 
 ## 许可证
 

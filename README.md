@@ -249,7 +249,12 @@ Useful search terms for this repository include: AI agent skill, Claude Code ski
 
 ## Versioning
 
-Current release line: `v0.1.x` preview. Pin to a git tag for reproducible installs once a tag exists, or use `main` for the latest draft.
+Current release line: `v0.1.x` preview. Tagged releases are available on the [Releases page](https://github.com/zhjai/agent-arena/releases) — pin to a tag for reproducible installs, or track `main` for the newest unreleased changes.
+
+```bash
+# Pin to a specific release (replace v0.1.4 with the tag you want)
+git clone --branch v0.1.4 https://github.com/zhjai/agent-arena.git
+```
 
 ## License
 
