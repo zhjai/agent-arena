@@ -1,7 +1,7 @@
 # Agent Arena
 
 <p align="center">
-  <img src="assets/banner.svg" alt="Agent Arena — portable multi-agent debate skill" width="100%">
+  <img src="assets/banner.png" alt="Agent Arena — multi-agent debate, red-team review, evidence checking, and judge workflows" width="100%">
 </p>
 
 <p align="center">

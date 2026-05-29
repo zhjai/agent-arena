@@ -8,6 +8,7 @@
 - Update skill description, tags, Overview, When to Use, Core Principle #4, Select Participants, and Claude Code harness adapter to reflect alternative backend support.
 - Add two example prompts for alternative backend arena sessions.
 - Add one-line `npx skills add zhjai/agent-arena` install via the vercel-labs `skills` CLI as the recommended install method; verified the CLI detects both skills from the repo's portable layout. Demote manual per-agent copy instructions to a "Manual install" subsection.
+- Replace the SVG banner with a richer infographic-style PNG banner (protocol flow, debate-arena visual, agent ecosystem). Compressed from 1.7 MB to ~250 KB via 256-color quantization at full resolution.
 
 ## v0.1.3
 

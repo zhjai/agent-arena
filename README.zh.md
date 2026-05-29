@@ -1,7 +1,7 @@
 # Agent Arena
 
 <p align="center">
-  <img src="assets/banner.svg" alt="Agent Arena — 可移植多智能体辩论技能" width="100%">
+  <img src="assets/banner.png" alt="Agent Arena — 多智能体辩论、红队评审、证据核查与裁判工作流" width="100%">
 </p>
 
 <p align="center">
