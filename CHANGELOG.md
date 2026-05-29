@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.1.4
+
+- Add explicit support for alternative model backends (GLM, DeepSeek, Qwen, Kimi, Doubao, etc.) accessible via proxy or Anthropic-protocol-compatible endpoint with Claude Code, or directly via OpenAI-compatible API with Codex.
+- Add `## Alternative Model Backends` section with supported configurations, connection method table, task packet declaration format, and degradation rule.
+- Clarify protocol distinction throughout: Claude Code uses the Anthropic API protocol; Codex uses the OpenAI API protocol. Alternative models connect to Claude Code via proxy (One API, LiteLLM, etc.) and to Codex natively.
+- Update skill description, tags, Overview, When to Use, Core Principle #4, Select Participants, and Claude Code harness adapter to reflect alternative backend support.
+- Add two example prompts for alternative backend arena sessions.
+
 ## v0.1.3
 
 - Rewrite `agent-arena` skill description to use user-intent trigger phrases ("second opinion", "independent review", "red-team", "Codex-vs-Claude debate") instead of implementation terminology, improving LLM-based skill auto-triggering.

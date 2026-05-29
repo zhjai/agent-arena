@@ -25,6 +25,10 @@
 
 适用于支持自定义 skill、自定义指令或工具驱动委托的 **Claude Code、OpenAI Codex、Hermes Agent、OpenClaw、OpenCode、Copilot CLI 及其他 AI 编程 agent**。
 
+**支持其他模型后端。** 很多人通过 Anthropic 兼容代理在 Claude Code 上接入非 Anthropic 模型（GLM、DeepSeek、Qwen、Kimi、豆包），或通过 Codex 的 OpenAI 兼容 API 直接接入这些模型。Agent Arena 把不同的模型家族视为真正的异构参与者——因此你可以让 GLM 对阵 Codex、DeepSeek 对阵 Claude，或任意跨模型组合，而不仅限于 Anthropic vs OpenAI。详见 [Alternative Model Backends](skills/agent-arena/SKILL.md#alternative-model-backends)。
+
+> **协议说明：** Claude Code 走 Anthropic API 协议，Codex 走 OpenAI API 协议。GLM/DeepSeek/Qwen 等模型暴露 OpenAI 兼容 API，因此可直接接入 Codex；接入 Claude Code 则需经过代理（One API、LiteLLM 或厂商的 Anthropic 兼容端点）做协议转换。
+
 > **重要说明：** 本仓库是协议/指令型 skill，不是可执行的编排器。它不会自动安装、认证或调用 Codex、Claude Code 或任何其他 agent。跨 agent 执行取决于宿主 agent、本地 CLI 可用性、认证状态、沙箱权限、网络访问以及用户对敏感数据的授权。
 
 本项目与 Anthropic、OpenAI、Hermes Agent、OpenClaw、OpenCode 及 GitHub Copilot 无隶属关系。
@@ -88,6 +92,7 @@ Agent Arena 提供一个可复用的协议：
 - 保留异议的 Pull Request 与代码审查
 - 实验规划与设计空间探索
 - 避免浅层的 A vs B vs A+B 推理
+- 跨模型后端对比（GLM 驱动的 Claude Code vs Codex、DeepSeek vs Claude、Qwen vs GPT）
 
 ## 能力边界与安全限制
 

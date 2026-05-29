@@ -25,6 +25,8 @@ Not for: simple factual lookups · formatting · routine small edits.
 
 It is designed for **Claude Code, OpenAI Codex, Hermes Agent, OpenClaw, OpenCode, Copilot CLI, and other AI coding agents** that support custom skills, custom instructions, or tool-driven delegation.
 
+**Works with alternative model backends.** Many people run Claude Code on non-Anthropic models (GLM, DeepSeek, Qwen, Kimi, Doubao) through an Anthropic-compatible proxy, or run those same models directly through Codex's OpenAI-compatible API. Agent Arena treats a different model family as a genuinely heterogeneous participant — so you can pit GLM against Codex, DeepSeek against Claude, or any cross-model panel, not just Anthropic-vs-OpenAI. See [Alternative Model Backends](skills/agent-arena/SKILL.md#alternative-model-backends).
+
 > **Important:** this repository is a protocol/instruction skill, not an executable orchestrator. It does not install, authenticate, or automatically call Codex, Claude Code, or any other agent. Cross-agent execution depends on the host agent, local CLI availability, authentication, sandbox permissions, network access, and user approval for sensitive data.
 
 This project is not affiliated with Anthropic, OpenAI, Hermes Agent, OpenClaw, OpenCode, or GitHub Copilot.
@@ -88,6 +90,7 @@ Core principle:
 - Pull request and code review with dissent preservation
 - Experiment planning and design-space exploration
 - Avoiding shallow A vs B vs A+B reasoning
+- Cross-model backend comparison (GLM-backed Claude Code vs Codex, DeepSeek vs Claude, Qwen vs GPT)
 
 ## Capability and safety boundaries
 

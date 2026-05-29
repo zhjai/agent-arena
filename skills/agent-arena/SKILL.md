@@ -1,14 +1,14 @@
 ---
 name: agent-arena
-description: Use when the user asks for a second opinion, independent review, sanity check, architecture red-team, red team critique, Codex-vs-Claude debate, review my plan, challenge this design, evidence-checked code or PR review, or multi-agent critique of a high-stakes implementation plan, design decision, research claim, or bug root-cause hypothesis. Do not use for simple lookups, formatting, or low-stakes one-step tasks.
-version: 0.1.3
+description: Use when the user asks for a second opinion, independent review, sanity check, architecture red-team, red team critique, Codex-vs-Claude debate, GLM-vs-Claude comparison, DeepSeek-vs-Codex review, cross-model comparison, review my plan, challenge this design, evidence-checked code or PR review, or multi-agent critique of a high-stakes implementation plan, design decision, research claim, or bug root-cause hypothesis. Also use when the user runs Claude Code on a non-Anthropic model backend (GLM, DeepSeek, Qwen, Kimi, Doubao, or another model via an Anthropic-compatible proxy) and wants a heterogeneous second opinion. Do not use for simple lookups, formatting, or low-stakes one-step tasks.
+version: 0.1.4
 author: zhjai
 license: MIT
 metadata:
   hermes:
-    tags: [ai-agents, multi-agent, agent-arena, codex, claude-code, hermes-agent, opencode, openclaw, rag, llm-as-judge, red-team]
+    tags: [ai-agents, multi-agent, agent-arena, codex, claude-code, hermes-agent, opencode, openclaw, rag, llm-as-judge, red-team, deepseek, glm, qwen, alternative-backends, cross-model]
     related_skills: [deliberative-analysis]
-  tags: [ai-agents, multi-agent, agent-arena, codex, claude-code, hermes-agent, opencode, openclaw, rag, llm-as-judge, red-team]
+  tags: [ai-agents, multi-agent, agent-arena, codex, claude-code, hermes-agent, opencode, openclaw, rag, llm-as-judge, red-team, deepseek, glm, qwen, alternative-backends, cross-model]
 ---
 
 # Agent Arena
@@ -19,7 +19,9 @@ Agent Arena is a reusable protocol skill for AI coding agents and LLM agent harn
 
 The core idea: **independent heterogeneous agents first, debate later, evidence before consensus, dissent preserved.**
 
-Agent Arena is designed for Claude Code, OpenAI Codex, Hermes Agent, OpenClaw, OpenCode, Copilot CLI, and other autonomous coding agents or agentic workflows that support custom skills, custom instructions, or tool-driven delegation.
+Agent Arena is designed for Claude Code, OpenAI Codex, Hermes Agent, OpenClaw, OpenCode, Copilot CLI, and other autonomous coding agents or agentic workflows that support custom skills, custom instructions, or tool-driven delegation. It also explicitly supports Claude Code configured with alternative model backends — including GLM (Zhipu AI), DeepSeek, Qwen (Alibaba), Kimi (Moonshot), Doubao (ByteDance), and others accessible via an Anthropic-protocol-compatible proxy or endpoint. A Claude Code session running on a different model family is a genuinely heterogeneous participant.
+
+**Protocol note:** Claude Code speaks the Anthropic API protocol; Codex speaks the OpenAI API protocol. Alternative models (DeepSeek, GLM, Qwen, etc.) typically expose OpenAI-compatible APIs, so they connect to Codex directly. They connect to Claude Code via a proxy or adapter (such as One API, LiteLLM, or a provider's Anthropic-compatible endpoint) that translates between the Anthropic API format and the target model's API.
 
 **Capability boundary:** this skill is not an executable orchestrator. It does not install, authenticate, or automatically call external agents. Cross-agent execution requires a host agent or human operator with the relevant CLI/tool access, credentials, permissions, and network availability.
 
@@ -36,6 +38,7 @@ Use this skill when the task involves:
 - LLM-as-a-judge, agent judge, agent game theory, or debate workflows
 - Red teaming a design, prompt, implementation, benchmark, or experiment plan
 - Avoiding single-model-family blind spots
+- Cross-model backend comparison (e.g. GLM-backed Claude Code vs Codex, DeepSeek vs Claude, Qwen vs GPT)
 
 Do **not** use full Agent Arena for:
 
@@ -67,7 +70,7 @@ Before starting, choose the lightest mode that can work:
 1. **Independence before discussion** — agents must produce initial answers before seeing each other.
 2. **Evidence beats consensus** — agreement between LLMs is not proof.
 3. **Deterministic checks beat model judgment** — tests, source code, docs, logs, benchmarks, and calculators outrank opinions.
-4. **Heterogeneity must be real** — different model families, harnesses, tools, prompts, or evidence paths are better than same-model roleplay.
+4. **Heterogeneity must be real** — different model families, harnesses, tools, prompts, or evidence paths are better than same-model roleplay. Claude Code configured with a different model backend (GLM, DeepSeek, Qwen, Kimi, etc.) counts as a genuinely heterogeneous participant — the model-family difference is real even if the harness is shared.
 5. **No forced consensus** — preserve strong minority views when uncertainty remains.
 6. **Expose dissent** — final answers must include the best counterargument.
 7. **Degrade honestly** — if an agent, tool, or search source is unavailable, state the degraded mode and confidence impact.
@@ -161,7 +164,8 @@ Write a compact task packet:
 Prefer heterogeneous participants:
 
 - Codex for implementation feasibility, tests, source inspection, tool execution, and code-grounded critique.
-- Claude Code for long-context design critique, reframing, synthesis, and red-team analysis.
+- Claude Code (Anthropic backend) for long-context design critique, reframing, synthesis, and red-team analysis.
+- Claude Code with an alternative backend (GLM, DeepSeek, Qwen, Kimi, Doubao, or another model reached through an Anthropic-protocol-compatible proxy) as a distinct heterogeneous participant when model-family diversity is desired or when the user's primary session already runs on an alternative backend.
 - Hermes Agent as orchestrator when available.
 - OpenClaw/OpenCode/Copilot or domain-specific agents when useful and actually callable.
 - Humans for ambiguous preferences, ethics, privacy approval, irreversible actions, or high-stakes choices.
@@ -324,6 +328,51 @@ If degraded:
 - Confidence impact:
 ```
 
+## Alternative Model Backends
+
+Claude Code uses the Anthropic API protocol. Users can connect it to alternative model backends (GLM-4, DeepSeek-V3, Qwen2.5-Coder, Kimi, Doubao, and others) by pointing `ANTHROPIC_BASE_URL` to a proxy or adapter — such as One API, LiteLLM, or a provider's Anthropic-protocol-compatible endpoint — that translates between the Anthropic API format and the target model's own API. Codex uses the OpenAI API protocol and can connect directly to any OpenAI-compatible endpoint (DeepSeek, Qwen, GLM, etc.) without a proxy. When a user connects Claude Code or Codex to an alternative model family, that session is a real heterogeneous participant in Agent Arena — not a degraded fallback.
+
+### Supported configurations
+
+**Claude Code (alternative backend) vs Codex**
+The most common cross-family panel: one participant runs a Chinese or third-party model family via the Claude Code harness; the other runs the GPT family via Codex. Genuine model-family diversity, different training data, different reasoning patterns, different blind spots.
+
+**Two Claude Code sessions with different backends**
+Run one session on Claude (Anthropic) and a second on DeepSeek, GLM, or Qwen. Both share the same harness and tool interface, but the model families are genuinely different. Useful when Codex is unavailable, not installed, or not preferred.
+
+**Examples:**
+- GLM-4 (via Claude Code) vs Codex (GPT-4.1) — architecture review
+- DeepSeek-Coder vs Claude Sonnet — algorithm implementation critique
+- Qwen2.5-Coder vs Claude Code — Chinese codebase or documentation analysis
+- Kimi (long-context) vs Claude Code — large file or repo-wide synthesis
+
+### Task packet declaration
+
+Always declare the model backend of each participant in the task packet so the judge and synthesis are transparent:
+
+```
+Participant A: Claude Code (model: claude-sonnet-4-5, provider: Anthropic native)
+Participant B: Claude Code (model: deepseek-chat, provider: DeepSeek via Anthropic-protocol proxy)
+Participant C: Codex (model: deepseek-chat, provider: DeepSeek via OpenAI-compatible API)
+```
+
+### Heterogeneity quality by model family
+
+| Family | Connect via | Relative strengths in arena context |
+|--------|-------------|-------------------------------------|
+| Claude (Anthropic) | Claude Code (native) | Long-context synthesis, nuanced critique, ambiguity handling |
+| GPT / o-series (OpenAI) | Codex (native) | Tool use, code execution, structured output, source inspection |
+| DeepSeek | Codex (OpenAI-compatible API) · Claude Code (via proxy) | Algorithm-heavy tasks, reasoning chains, cost-efficient deep analysis |
+| GLM (Zhipu AI) | Codex (OpenAI-compatible API) · Claude Code (via proxy) | Chinese codebase/doc coverage, bilingual analysis |
+| Qwen (Alibaba) | Codex (OpenAI-compatible API) · Claude Code (via proxy) | Chinese ecosystem, strong code generation, broad domain coverage |
+| Kimi (Moonshot) | Codex (OpenAI-compatible API) · Claude Code (via proxy) | Very long context windows, document-heavy synthesis |
+
+Use these differences to assign complementary roles rather than identical tasks to each participant.
+
+### Degradation rule
+
+If only one model family is available (e.g. Claude Code on DeepSeek but no Codex and no second session), use `solo_red_team` and disclose: "Arena running in solo mode — only DeepSeek backend available; heterogeneity is reduced."
+
 ## Harness Adapters
 
 ### Codex
@@ -344,6 +393,14 @@ If degraded:
 - Invite Codex as default counterpart only when available and allowed.
 - Use Claude Code strengths for design critique, long-context synthesis, reframing, and adversarial review.
 - Avoid letting one Claude session be proposer, judge, and synthesizer without disclosure.
+
+**Alternative model backends:** Claude Code uses the Anthropic API protocol. If the user has configured it to route through a proxy (One API, LiteLLM, or a provider's Anthropic-compatible endpoint) that connects to a non-Anthropic model (GLM, DeepSeek, Qwen, Kimi, Doubao, etc.), that session is already a different model family from a standard Claude session. In that case:
+
+- Declare the backend in the task packet: `Participant A: Claude Code (routed via proxy → deepseek-chat)`.
+- The default counterpart priority is: Codex (OpenAI protocol, can connect to GPT or other OpenAI-compatible models directly) if available → a second Claude Code session routed to a different backend → `solo_red_team` if neither is available.
+- When invoking a second Claude Code session via `-p` print mode, the model backend follows whichever `ANTHROPIC_BASE_URL` and `ANTHROPIC_API_KEY` the shell environment provides at call time. To target a specific alternative backend for the counterpart, export those variables before the `claude` call.
+- Two Claude Code sessions routed to different model backends (e.g. GLM vs Claude, DeepSeek vs Qwen via respective proxies) count as genuinely heterogeneous and satisfy the heterogeneity requirement even without Codex.
+- Always disclose which model each participant uses in the synthesis output so the user knows the source of each perspective.
 
 ### Hermes Agent
 
@@ -380,6 +437,8 @@ If degraded:
 - “Have Codex and Claude Code independently analyze this bug root cause, then judge.”
 - “Use implementation_plan_review before I build this plan.”
 - “Red-team this implementation plan before I build it.”
+- “I'm running Claude Code with DeepSeek via proxy. Use agent-arena quick_panel: have me (DeepSeek) analyze first, then invoke Codex as the counterpart, then synthesize with dissent.”
+- “Use agent-arena to compare how GLM and Claude approach this algorithm design. I'll run GLM via my proxy; invoke the standard claude CLI for the Claude side.”
 
 ## Verification Checklist
 
