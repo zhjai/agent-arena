@@ -5,6 +5,10 @@
 </p>
 
 <p align="center">
+  <strong>English</strong> · <a href="README.zh.md">中文</a>
+</p>
+
+<p align="center">
   <a href="#installation"><img src="https://img.shields.io/badge/skill-agent--arena-blue" alt="skill"></a>
   <a href="#claude-code"><img src="https://img.shields.io/badge/Claude%20Code-portable%20skill-6b46c1" alt="Claude Code"></a>
   <a href="#openai-codex"><img src="https://img.shields.io/badge/OpenAI%20Codex-portable%20skill-111827" alt="OpenAI Codex"></a>
