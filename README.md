@@ -105,11 +105,32 @@ Agent Arena may involve sending context to another model, CLI, tool, web search 
 
 ## Installation
 
+### Quick install (recommended)
+
+Install straight from this repo with the [`skills`](https://github.com/vercel-labs/skills) CLI — no manual copying. It works with Claude Code, Codex, Cursor, OpenCode, and 50+ other agents:
+
+```bash
+# Install both skills to Claude Code, available across all projects
+npx skills add zhjai/agent-arena -g -a claude-code
+
+# Install just one skill
+npx skills add zhjai/agent-arena --skill agent-arena -g -a claude-code
+
+# Preview the skills in this repo without installing anything
+npx skills add zhjai/agent-arena --list
+```
+
+Swap `-a claude-code` for `-a codex` (or another agent), or omit `-a` to choose interactively. Drop `-g` to install into the current project instead of globally.
+
+After installing, start a new agent session and trigger it with natural language — agent-arena activates on phrases like "second opinion", "independent review", "red-team my plan", or "let Codex and Claude review this".
+
+### Manual install
+
 This repository uses the portable `skills/<skill-name>/SKILL.md` layout. Copy the **whole skill folder** so bundled files such as `LICENSE` and `agents/openai.yaml` travel with the skill.
 
 After copying, restart or reload your agent session so it rescans skills. Exact paths may vary by version or configuration; prefer your agent's official docs when they differ.
 
-### Claude Code
+#### Claude Code
 
 ```bash
 git clone https://github.com/zhjai/agent-arena.git
@@ -126,7 +147,7 @@ Use agent-arena to red-team this decision: [your question here]
 
 Or trigger it with natural language — agent-arena activates on phrases like "second opinion", "independent review", "red-team my plan", or "let Codex and Claude review this".
 
-### OpenAI Codex
+#### OpenAI Codex
 
 Copy the skills into `$CODEX_HOME/skills`, which defaults to `~/.codex/skills` unless configured otherwise:
 
@@ -143,7 +164,7 @@ Then start a new Codex session and ask:
 Use agent-arena. You are Codex; invite Claude Code as the heterogeneous counterpart if it is installed, authenticated, and callable. If shell access exists, first check `command -v claude && claude --version`; do not treat absence from built-in subagent tools as absence of Claude Code. Start with a compact task packet, but allow Claude Code to read relevant source/docs/tests inside the approved repo scope when needed. Exclude secrets, datasets, generated results, private logs, and unrelated directories unless explicitly approved. When using Claude Code print mode with Read/Glob/Grep, remember that `--max-turns` counts tool interaction turns; use enough budget for file exploration or pass a no-tools local summary. If Claude returns `error_max_turns`, retry once instead of treating it as a substantive answer. For non-trivial work, run multi-round critique/revision instead of one-shot. If the task is to design/build something together, use `collaborative_design` and treat Claude Code as co-designer/architecture partner rather than only reviewer. Otherwise disclose degraded mode.
 ```
 
-### Hermes Agent
+#### Hermes Agent
 
 Clone or copy the skills into your Hermes skills directory:
 
@@ -161,7 +182,7 @@ Raw skill URLs for pinned install scripts or manual inspection:
 - Agent Arena: https://raw.githubusercontent.com/zhjai/agent-arena/main/skills/agent-arena/SKILL.md
 - Deliberative Analysis: https://raw.githubusercontent.com/zhjai/agent-arena/main/skills/deliberative-analysis/SKILL.md
 
-### OpenClaw, OpenCode, Copilot CLI, and other agents
+#### OpenClaw, OpenCode, Copilot CLI, and other agents
 
 Use this repository as a portable instruction layout for agents that support custom skills, custom instructions, or markdown workflow guides:
 

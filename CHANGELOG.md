@@ -7,6 +7,7 @@
 - Clarify protocol distinction throughout: Claude Code uses the Anthropic API protocol; Codex uses the OpenAI API protocol. Alternative models connect to Claude Code via proxy (One API, LiteLLM, etc.) and to Codex natively.
 - Update skill description, tags, Overview, When to Use, Core Principle #4, Select Participants, and Claude Code harness adapter to reflect alternative backend support.
 - Add two example prompts for alternative backend arena sessions.
+- Add one-line `npx skills add zhjai/agent-arena` install via the vercel-labs `skills` CLI as the recommended install method; verified the CLI detects both skills from the repo's portable layout. Demote manual per-agent copy instructions to a "Manual install" subsection.
 
 ## v0.1.3
 
