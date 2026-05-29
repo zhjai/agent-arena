@@ -1,5 +1,7 @@
 # Agent Arena
 
+> **面向 Claude Code × Codex 的证据优先多智能体辩论** —— 经得起交叉质询的第二意见。
+
 <p align="center">
   <img src="assets/banner.png" alt="Agent Arena — 多智能体辩论、红队评审、证据核查与裁判工作流" width="100%">
 </p>

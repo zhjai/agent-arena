@@ -1,5 +1,7 @@
 # Agent Arena
 
+> **Evidence-first multi-agent debate for Claude Code × Codex** — a second opinion that survives cross-examination.
+
 <p align="center">
   <img src="assets/banner.png" alt="Agent Arena — multi-agent debate, red-team review, evidence checking, and judge workflows" width="100%">
 </p>
