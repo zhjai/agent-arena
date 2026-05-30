@@ -70,10 +70,10 @@ Before starting, choose the lightest mode that can work:
 **Escalate** beyond `quick_panel`/`solo_red_team` to `collaborative_design`, `deliberative_analysis`, or `full_arena` if ANY of these fire:
 
 - **Persistent or hard-to-reverse side effects** — changing a schema, writing config, uploading data/runs, or setting a policy that affects all future steps.
-- **Redesign, not point review** — you are (re)designing a structure, data contract, interface, or allow/deny list, not reviewing one concrete spot.
+- **Redesign, not point review** — you are (re)designing a *durable* structure, data contract, interface, or allow/deny list, not reviewing or tweaking one concrete spot.
 - **Genuinely interdependent decisions** — several choices must be made together because changing one forces the others. (Ordinary implementation detail does *not* count: "this function affects later code" is not coupling; "the metric schema dictates the case-data contract dictates the logging policy" is.)
 - **Repeating a known past mistake** — the task partly exists to avoid re-doing something that already went wrong (e.g. re-uploading noisy runs).
-- **Output becomes a contract** consumed by many later steps (data contract, logging policy, interface).
+- **Output becomes a durable contract** consumed by *other* steps or people — a data contract, logging policy, or interface with real blast radius. (A local helper or a signature only this task uses is *not* a contract; the bar is durability plus external consumers.)
 
 **Stay light** when none fire: a single reversible low-consequence question, the user asked for speed, or deterministic checks / source inspection already answer it.
 
@@ -142,7 +142,7 @@ claude -p '<ArenaTaskPacket with exact dirs/files>' --allowedTools 'Read,Glob,Gr
 
 **Preflight runbook** for every headless call: pass `-p`; prefer `stream-json` above trivial; log prompt / model / allowedTools / timeout / max-turns / input source; on failure classify it (timeout / max-turns / tool-permission / stdin-wait / malformed-JSON / auth / refusal); when retrying, **change exactly one variable at a time**.
 
-If Claude returns JSON with `subtype: error_max_turns`, do **not** treat that as Claude Code being unavailable or as a substantive arena answer. Retry once with either (a) a higher turn cap and narrower approved scope, or (b) no tools plus Codex-supplied raw excerpts (never conclusions). Disclose the retry/degraded continuity if it affects confidence, and tell the user whether a retry is recommended.
+If Claude returns JSON with `subtype: error_max_turns`, do **not** treat that as Claude Code being unavailable or as a substantive arena answer. Retry once with either (a) a higher turn cap and narrower approved scope, or (b) no tools plus Codex-supplied raw excerpts (never conclusions). Retry only **once** — do not loop; if it still fails, surface a clear stop / narrow-scope / retry recommendation to the user and disclose the degraded continuity.
 
 For sensitive/private repositories, do not send or allow access to datasets, result files, secrets, private logs, or unrelated proprietary directories without explicit approval. If approval is missing, ask for approval or run a degraded local arena and disclose it.
 
