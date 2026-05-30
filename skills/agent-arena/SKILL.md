@@ -1,7 +1,7 @@
 ---
 name: agent-arena
 description: Use when the user asks for a second opinion, independent review, sanity check, architecture red-team, red team critique, Codex-vs-Claude debate, GLM-vs-Claude comparison, DeepSeek-vs-Codex review, cross-model comparison, review my plan, challenge this design, evidence-checked code or PR review, or multi-agent critique of a high-stakes implementation plan, design decision, research claim, or bug root-cause hypothesis. Also use when the user runs Claude Code on a non-Anthropic model backend (GLM, DeepSeek, Qwen, Kimi, Doubao, or another model via an Anthropic-compatible proxy) and wants a heterogeneous second opinion. Do not use for simple lookups, formatting, or low-stakes one-step tasks.
-version: 0.1.4
+version: 0.1.5
 author: zhjai
 license: MIT
 metadata:
@@ -65,6 +65,18 @@ Before starting, choose the lightest mode that can work:
 - `tree_search`: explore a large option space with branching strategies.
 - `full_arena`: independent generation, evidence, critique, revision, blind judging, synthesis.
 
+**Triage before you commit — both directions matter.** "Lightest mode that can work" is the rule only *after* triage, not the triage rule itself. Under-triage (too light) is as much a failure as over-triage (too heavy).
+
+**Escalate** beyond `quick_panel`/`solo_red_team` to `collaborative_design`, `deliberative_analysis`, or `full_arena` if ANY of these fire:
+
+- **Persistent or hard-to-reverse side effects** — changing a schema, writing config, uploading data/runs, or setting a policy that affects all future steps.
+- **Redesign, not point review** — you are (re)designing a structure, data contract, interface, or allow/deny list, not reviewing one concrete spot.
+- **Genuinely interdependent decisions** — several choices must be made together because changing one forces the others. (Ordinary implementation detail does *not* count: "this function affects later code" is not coupling; "the metric schema dictates the case-data contract dictates the logging policy" is.)
+- **Repeating a known past mistake** — the task partly exists to avoid re-doing something that already went wrong (e.g. re-uploading noisy runs).
+- **Output becomes a contract** consumed by many later steps (data contract, logging policy, interface).
+
+**Stay light** when none fire: a single reversible low-consequence question, the user asked for speed, or deterministic checks / source inspection already answer it.
+
 ## Core Principles
 
 1. **Independence before discussion** — agents must produce initial answers before seeing each other.
@@ -74,7 +86,7 @@ Before starting, choose the lightest mode that can work:
 5. **No forced consensus** — preserve strong minority views when uncertainty remains.
 6. **Expose dissent** — final answers must include the best counterargument.
 7. **Degrade honestly** — if an agent, tool, or search source is unavailable, state the degraded mode and confidence impact.
-8. **Use the lightest arena** — avoid expensive orchestration for simple tasks.
+8. **Right-size the arena** — pick the lightest mode that *fully covers* the task. Under-triaging a complex or irreversible task is as much a failure as over-orchestrating a simple one; when escalation triggers fire (see Quick Decision Gate), do not stay light.
 9. **Human checkpoints for high-risk actions** — do not push, deploy, delete, spend money, or expose secrets without appropriate confirmation.
 10. **Context minimization without blindness** — start with a compact task packet, but allow agents to read necessary source/docs when evidence requires it, subject to the permission boundary.
 
@@ -103,20 +115,34 @@ command -v claude && claude --version
 
 If callable and the task is not explicitly constrained to local-only/private-only context, run Claude Code in print mode with a compact task packet and read-only access to the approved worktree. Context minimization means “do not pre-send everything”; it does **not** mean forbidding Claude Code from reading necessary files. Prefer `--allowedTools 'Read,Glob,Grep'` for review/analysis; add `Bash` only when deterministic commands such as tests, lint, or dependency inspection are explicitly allowed.
 
-Choose the Claude Code `--max-turns` budget based on how much file/tool exploration Claude must do. `--max-turns` limits agent/tool interaction turns, not final-answer attempts; each Read/Glob/Grep/Bash loop consumes turns. For repo-scoped design or pipeline analysis, a low cap such as 6 can fail with `error_max_turns` before Claude has summarized anything. Use one of these patterns:
+**Default: separate "read" from "analyze."** For bounded analysis/critique tasks (the common case), do not make Claude self-explore the repo under a turn budget — that is what exhausts `--max-turns`. Instead, Codex extracts the relevant material and Claude analyzes it with no tools:
 
 ```bash
-# Minimal context, no tools: good when Codex already extracted the relevant summary.
-claude -p '<ArenaTaskPacket plus local summary; no file reads needed>' --allowedTools '' --max-turns 2 --output-format json
-
-# Read-only repo/doc review: allow enough turns for Glob/Grep/Read exploration.
-claude -p '<ArenaTaskPacket, approved scope, and role instructions>' --allowedTools 'Read,Glob,Grep' --max-turns 12 --output-format json
-
-# Larger or ambiguous codebase review: raise the cap or narrow the scope first.
-claude -p '<ArenaTaskPacket with exact directories/files and exclusions>' --allowedTools 'Read,Glob,Grep' --max-turns 20 --output-format json
+# Preferred for bounded critique: Codex supplies raw excerpts; Claude just analyzes.
+claude -p '<ArenaTaskPacket + RAW file excerpts>' --allowedTools '' --max-turns 2 --output-format json
 ```
 
-If Claude returns JSON with `subtype: error_max_turns`, do **not** treat that as Claude Code being unavailable or as a substantive arena answer. Retry once with either (a) a higher turn cap and narrower approved scope, or (b) no tools plus a Codex-generated local summary. Disclose the retry/degraded continuity if it affects confidence.
+**Context budget protocol (protects independence).** What Codex feeds must be *raw evidence*, never Codex's own conclusions — feeding "I suspect the bug is X" or a selective summary contaminates Claude's independent first pass (principle #1). Each excerpt must include the **file path, line numbers when available, and an explicit note of what was omitted** ("these are excerpts; ask for more if needed") so Claude can detect cherry-picking and request more.
+
+**Do not over-redact into uselessness.** Default to minimal exposure of *sensitive* material (secrets, credentials, customer data, unrelated proprietary code) — but task-relevant **artifacts are evidence, not noise**. When the task is to verify what was actually produced or uploaded (experiment runs, backfill/backup runs, media, predictions, metrics, generated outputs, dashboards), excluding those artifacts forces Claude to *infer behavior from code instead of checking the real output*. The orchestrator sets scope, but "minimal" must not be so small that the counterpart can only guess. When unsure, include the artifact paths and let Claude request what it needs.
+
+**Only when Claude must self-discover** which files matter (Codex cannot pre-scope them) give it tools and a realistic turn budget. `--max-turns` counts each Read/Glob/Grep/Bash loop, not final-answer attempts, so a low cap fails with `error_max_turns` before any answer:
+
+```bash
+claude -p '<ArenaTaskPacket, approved scope, role>' --allowedTools 'Read,Glob,Grep' --max-turns 12 --output-format json   # ordinary review
+claude -p '<ArenaTaskPacket with exact dirs/files>' --allowedTools 'Read,Glob,Grep' --max-turns 20 --output-format json   # larger / ambiguous
+```
+
+**Timing & timeouts.** Cross-agent calls are slow *in both directions* — Codex→Claude and Claude→Codex both routinely take **several minutes**. Measured baselines: a minimal single-turn no-tools `claude -p` is ~6s (ttft ~3s on Opus); a multi-turn repo review runs **2–5 minutes** normally, larger ones longer. `--output-format json` stays **silent until fully done** — silence is not a hang. Therefore:
+
+- Set timeouts to match `--max-turns` (e.g. **5–10 minutes**), never 1 minute.
+- Use `--output-format stream-json` for anything non-trivial to watch turn-by-turn progress instead of guessing.
+- **Record each call's actuals** from the returned JSON (`duration_ms`, `duration_api_ms`, `num_turns`) and judge "stuck" against measured time, not gut feel.
+- Distinguish a real hang from normal slowness: a real hang is usually a **missing `-p`** (interactive REPL waiting on stdin) or a **tool awaiting a confirmation that was never granted** — not a long headless run.
+
+**Preflight runbook** for every headless call: pass `-p`; prefer `stream-json` above trivial; log prompt / model / allowedTools / timeout / max-turns / input source; on failure classify it (timeout / max-turns / tool-permission / stdin-wait / malformed-JSON / auth / refusal); when retrying, **change exactly one variable at a time**.
+
+If Claude returns JSON with `subtype: error_max_turns`, do **not** treat that as Claude Code being unavailable or as a substantive arena answer. Retry once with either (a) a higher turn cap and narrower approved scope, or (b) no tools plus Codex-supplied raw excerpts (never conclusions). Disclose the retry/degraded continuity if it affects confidence, and tell the user whether a retry is recommended.
 
 For sensitive/private repositories, do not send or allow access to datasets, result files, secrets, private logs, or unrelated proprietary directories without explicit approval. If approval is missing, ask for approval or run a degraded local arena and disclose it.
 
@@ -317,15 +343,17 @@ For research, factual, or technical claims, keep a compact ledger:
 ## Suggested Next Step
 ```
 
-If degraded:
+If a cross-agent call failed or the arena ran degraded, you **must** end the user-facing output with this block — never silently swallow a failure, and always state whether to retry and the one thing to change:
 
 ```markdown
 ## Arena Limitations
 
 - Failed agents:
+- Failure type: timeout / max-turns / tool-permission / stdin-wait / malformed-JSON / auth / refusal
 - Missing checks:
 - Degraded mode used:
 - Confidence impact:
+- Retry recommendation: <retry or not, and the one variable to change>
 ```
 
 ## Alternative Model Backends
@@ -380,9 +408,9 @@ If only one model family is available (e.g. Claude Code on DeepSeek but no Codex
 - Run the task as Codex.
 - Invite Claude Code as default counterpart when available and allowed.
 - Do not assume Claude Code is unavailable merely because it is not listed as a Codex built-in subagent. If shell/Bash is available, check `command -v claude && claude --version` before downgrading.
-- If Claude Code is callable and context sharing is allowed, call it via print mode with a compact task packet and approved read-only repo scope. Use a realistic `--max-turns` budget: `--max-turns` counts Claude/tool interaction turns, so `Read`/`Glob`/`Grep` exploration can exhaust low caps before a final answer. Prefer `--max-turns 12` for ordinary read-only repo review, higher or narrower scope for larger reviews, and `--allowedTools '' --max-turns 2` only when Codex has already supplied a sufficient local summary.
-- If Claude Code returns `error_max_turns`, do not count it as a failed participant or final critique. Retry once with a higher cap/narrower scope or a no-tools summary prompt, then disclose any degraded continuity.
-- Do not over-redact into uselessness: Claude Code may read relevant source files, configs, tests, docs, and dependency manifests when needed; exclude secrets, datasets, generated results, private logs, and unrelated directories unless explicitly approved.
+- Prefer the **read/analyze split** (see Default Cross-Agent Rule): supply Claude **raw excerpts** with paths/line-numbers/omissions and call it with `--allowedTools '' --max-turns 2`. Give Claude `Read,Glob,Grep` + a realistic budget (`--max-turns 12`+) only when it must self-discover which files matter. Cross-agent calls take minutes in both directions — set timeouts to match max-turns (5–10 min, not 1 min) and use `stream-json` to watch progress; a silent `--output-format json` run is not a hang.
+- If Claude Code returns `error_max_turns`, do not count it as a failed participant or final critique. Retry once with a higher cap/narrower scope or no tools + raw excerpts (never your own conclusions), then disclose any degraded continuity and tell the user whether to retry.
+- Do not over-redact into uselessness: Claude Code may read relevant source files, configs, tests, docs, and dependency manifests when needed. Exclude **sensitive** material (secrets, credentials, customer data, private logs, unrelated proprietary code) by default — but task-relevant artifacts (experiment runs, media, predictions, metrics, generated outputs) are **evidence** when the task is to verify real output; include their paths rather than blindly excluding them.
 - For non-trivial arenas, run at least two interaction rounds with Claude Code: independent answer, then critique/revision based on Codex's extracted disagreements and evidence questions. If the user asks to design/build a solution together, use `collaborative_design`: have Claude Code act as co-designer/architecture partner, not merely reviewer.
 - Use Codex strengths for source inspection, tests, CLI checks, implementation feasibility, and structured diffs.
 - If Claude Code is unavailable or not approved for the data involved, disclose fallback and run `solo_red_team` or ask the orchestrator for another heterogeneous agent.
@@ -424,7 +452,7 @@ If only one model family is available (e.g. Claude Code on DeepSeek but no Codex
 3. **Skipping evidence checks** — use docs, code, tests, logs, benchmarks, and web sources when claims matter.
 4. **Using fake heterogeneity** — same model plus different roles is weaker than different harnesses and tools.
 5. **Hiding dissent** — the final answer should show meaningful disagreement.
-6. **Overusing full arena** — use quick modes for low-risk tasks.
+6. **Mis-sizing the arena** — both overusing full arena on low-risk tasks *and* under-triaging complex/irreversible ones (structure/contract/policy redesign, persistent side effects, interdependent decisions) as quick_panel. Right-size first; "lightest" applies only after triage.
 7. **Forgetting degradation disclosure** — state which agents or checks failed.
 8. **Letting the judge know authors unnecessarily** — blind judging reduces halo effects.
 9. **Leaking sensitive context** — minimize and redact before external delegation.
@@ -448,4 +476,6 @@ If only one model family is available (e.g. Claude Code on DeepSeek but no Codex
 - [ ] Sensitive context was minimized or explicitly approved before external delegation.
 - [ ] Dissent and counterarguments are visible.
 - [ ] Final answer states uncertainty and next checks.
+- [ ] Mode was right-sized — escalated past quick_panel/solo when escalation triggers fired.
+- [ ] Cross-agent call timings/failures recorded; on failure, a retry recommendation was given to the user.
 - [ ] Any unavailable agents/tools are disclosed.

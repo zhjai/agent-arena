@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.1.5
+
+- **Right-size the arena (fix mode under-triage):** principle #8 changed from "use the lightest arena" to "right-size the arena"; Quick Decision Gate gains bidirectional triage with explicit escalation triggers (persistent/irreversible side effects, structure/contract/policy redesign, interdependent decisions, repeating a past mistake, output-becomes-contract) plus a coupling-vs-implementation-detail example. Common Mistake #6 reworded to cover both over- and under-triage. Root cause: the skill previously had three one-directional biases all pushing "go light" and no warning against under-triage.
+- **Read/analyze separation as default (reduce error_max_turns):** for bounded critique, Codex supplies raw excerpts and Claude analyzes with no tools; `Read,Glob,Grep` + turn budget is reserved for genuine self-discovery. Added a context-budget protocol — feed raw evidence (paths, line numbers, omission notes), never Codex's conclusions, to protect Claude's independence.
+- **Stop over-redacting evidence:** task-relevant artifacts (experiment runs, media, predictions, metrics, generated outputs) are evidence, not noise; excluding them forces inference from code instead of verifying real output.
+- **Timing, timeouts, observability:** cross-agent calls take minutes in both directions (measured: single-turn no-tools ~6s, multi-turn repo review 2–5 min); a silent `--output-format json` run is not a hang. Set timeouts to match `--max-turns` (5–10 min, not 1 min), prefer `stream-json` to watch progress, and record `duration_ms`/`num_turns`. Added a preflight runbook and failure classification.
+- **Failure handling for users:** Arena Limitations template gains `Failure type` and `Retry recommendation` fields; cross-agent failures must end the user-facing output with whether to retry and the one variable to change, never silently swallowed.
+
 ## v0.1.4
 
 - Add explicit support for alternative model backends (GLM, DeepSeek, Qwen, Kimi, Doubao, etc.) accessible via proxy or Anthropic-protocol-compatible endpoint with Claude Code, or directly via OpenAI-compatible API with Codex.
