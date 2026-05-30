@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.1.6
+
+- Add interop hook to the companion skill [`groundcheck`](https://github.com/zhjai/groundcheck): a single-agent, evidence-grounded fact-gate. After independent generation, run groundcheck per answer; `refuted` claims are sent back to their `source_agent` (with evidence, not conclusions) before cross-critique, catching factual errors before debate can reinforce a shared hallucination. Adds groundcheck to `related_skills`. Frames the pair as "two depths of one verification stack": agent-arena (multi-agent debate, overconfidence) + groundcheck (single-agent verification, hallucination).
+
 ## v0.1.5
 
 - **Right-size the arena (fix mode under-triage):** principle #8 changed from "use the lightest arena" to "right-size the arena"; Quick Decision Gate gains bidirectional triage with explicit escalation triggers (persistent/irreversible side effects, structure/contract/policy redesign, interdependent decisions, repeating a past mistake, output-becomes-contract) plus a coupling-vs-implementation-detail example. Common Mistake #6 reworded to cover both over- and under-triage. Root cause: the skill previously had three one-directional biases all pushing "go light" and no warning against under-triage.

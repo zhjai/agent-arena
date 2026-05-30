@@ -15,7 +15,7 @@
   <a href="#claude-code"><img src="https://img.shields.io/badge/Claude%20Code-portable%20skill-6b46c1" alt="Claude Code"></a>
   <a href="#openai-codex"><img src="https://img.shields.io/badge/OpenAI%20Codex-portable%20skill-111827" alt="OpenAI Codex"></a>
   <a href="#hermes-agent"><img src="https://img.shields.io/badge/Hermes%20Agent-skill-059669" alt="Hermes Agent"></a>
-  <img src="https://img.shields.io/badge/version-0.1.5-informational" alt="version">
+  <img src="https://img.shields.io/badge/version-0.1.6-informational" alt="version">
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License"></a>
 </p>
 
@@ -78,6 +78,8 @@ Core principle:
 
 - [`agent-arena`](skills/agent-arena/SKILL.md) — the main heterogeneous multi-agent review protocol.
 - [`deliberative-analysis`](skills/deliberative-analysis/SKILL.md) — a lightweight companion for anti-overconfidence, anti-tunnel-vision, non-obvious alternatives, and escalation into Agent Arena.
+
+**Companion (separate repo):** [`groundcheck`](https://github.com/zhjai/groundcheck) — single-agent, evidence-grounded fact-checking that catches **hallucinations**. Agent Arena treats overconfidence (multi-agent debate); groundcheck treats hallucination (single-agent verification). Plug it in as a **pre-debate fact-gate**: `refuted` claims are sent back to their source agent before debate. Two depths of one verification stack.
 
 ## Use cases
 

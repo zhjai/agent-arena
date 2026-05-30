@@ -11,7 +11,7 @@
   <a href="#claude-code"><img src="https://img.shields.io/badge/Claude%20Code-portable%20skill-6b46c1" alt="Claude Code"></a>
   <a href="#openai-codex"><img src="https://img.shields.io/badge/OpenAI%20Codex-portable%20skill-111827" alt="OpenAI Codex"></a>
   <a href="#hermes-agent"><img src="https://img.shields.io/badge/Hermes%20Agent-skill-059669" alt="Hermes Agent"></a>
-  <img src="https://img.shields.io/badge/version-0.1.3-informational" alt="version">
+  <img src="https://img.shields.io/badge/version-0.1.6-informational" alt="version">
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License"></a>
 </p>
 
@@ -80,6 +80,8 @@ Agent Arena 提供一个可复用的协议：
 
 - [`agent-arena`](skills/agent-arena/SKILL.md) — 核心异构多智能体评审协议。
 - [`deliberative-analysis`](skills/deliberative-analysis/SKILL.md) — 轻量级伴侣 skill，用于对抗过度自信、防止隧道视野、寻找非显而易见的替代方案，并可升级到 Agent Arena 流程。
+
+**配套项目（独立仓库）：** [`groundcheck`](https://github.com/zhjai/groundcheck) — 单 agent、证据接地的事实核查,专治**幻觉**。Agent Arena 治过度自信(多 agent 辩论),groundcheck 治幻觉(单 agent 核查)。可作为**辩论前的事实门**接入:`refuted` 声明在辩论前打回原 agent。两者是同一验证栈的两个深度。
 
 ## 适用场景
 

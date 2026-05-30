@@ -1,13 +1,13 @@
 ---
 name: agent-arena
 description: Use when the user asks for a second opinion, independent review, sanity check, architecture red-team, red team critique, Codex-vs-Claude debate, GLM-vs-Claude comparison, DeepSeek-vs-Codex review, cross-model comparison, review my plan, challenge this design, evidence-checked code or PR review, or multi-agent critique of a high-stakes implementation plan, design decision, research claim, or bug root-cause hypothesis. Also use when the user runs Claude Code on a non-Anthropic model backend (GLM, DeepSeek, Qwen, Kimi, Doubao, or another model via an Anthropic-compatible proxy) and wants a heterogeneous second opinion. Do not use for simple lookups, formatting, or low-stakes one-step tasks.
-version: 0.1.5
+version: 0.1.6
 author: zhjai
 license: MIT
 metadata:
   hermes:
     tags: [ai-agents, multi-agent, agent-arena, codex, claude-code, hermes-agent, opencode, openclaw, rag, llm-as-judge, red-team, deepseek, glm, qwen, alternative-backends, cross-model]
-    related_skills: [deliberative-analysis]
+    related_skills: [deliberative-analysis, groundcheck]
   tags: [ai-agents, multi-agent, agent-arena, codex, claude-code, hermes-agent, opencode, openclaw, rag, llm-as-judge, red-team, deepseek, glm, qwen, alternative-backends, cross-model]
 ---
 
@@ -232,6 +232,8 @@ For every important claim, prefer direct checks:
 - use web search for current facts,
 - compute numbers with tools,
 - cite exact URLs, file paths, commands, or quotes.
+
+**Pre-debate fact-gate (companion skill `groundcheck`).** Multi-agent debate treats overconfidence but can *reinforce* a shared hallucination. To catch factual errors before debate, run the companion skill [`groundcheck`](https://github.com/zhjai/groundcheck) as a single-agent fact-gate on each agent's independent answer: it extracts atomic claims, grounds them in evidence, and returns a Claim Ledger. Any claim marked `refuted` is **sent back to its `source_agent`** (with the refuting evidence, not a conclusion) to revise before cross-critique; re-check newly introduced or changed claims after debate. This is single-agent verification (treats hallucination), distinct from this skill's multi-agent debate (treats overconfidence) — they are two depths of one verification stack. See groundcheck's fact-gate contract for the send-back and anti-loop rules.
 
 ### 6. Multi-Round Cross-Critique
 
