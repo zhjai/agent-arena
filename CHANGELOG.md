@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.1.8
+
+- Add an **endpoint-vs-task probe** to the timeout guidance: on repeated timeouts, first run a trivial call (`codex exec 'reply OK'` / `claude -p 'reply OK'`). Returns in seconds → endpoint is fine, the task is just heavy (shrink / feed excerpts / raise timeout). The trivial call also hangs or shows connection errors (websocket 404, repeated reconnects, base-url errors) → the failure is the endpoint/proxy config, not the task or the timeout; restarting processes won't fix a config-level endpoint fault. Derived from real use where a proxy's websocket `/responses` endpoint returned 404 and masqueraded as task timeouts.
+
 ## v0.1.7
 
 - Add `model-unavailable` to the failure taxonomy (Preflight runbook + Arena Limitations template). Reported from real use: a rejected model override (e.g. requesting `gpt-5.2-codex` on an account without access) is distinct from `auth` (authentication is fine) and `refusal` (the model declined to answer).

@@ -1,7 +1,7 @@
 ---
 name: agent-arena
 description: Use when the user asks for a second opinion, independent review, sanity check, architecture red-team, red team critique, Codex-vs-Claude debate, GLM-vs-Claude comparison, DeepSeek-vs-Codex review, cross-model comparison, review my plan, challenge this design, evidence-checked code or PR review, or multi-agent critique of a high-stakes implementation plan, design decision, research claim, or bug root-cause hypothesis. Also use when the user runs Claude Code on a non-Anthropic model backend (GLM, DeepSeek, Qwen, Kimi, Doubao, or another model via an Anthropic-compatible proxy) and wants a heterogeneous second opinion. Do not use for simple lookups, formatting, or low-stakes one-step tasks.
-version: 0.1.7
+version: 0.1.8
 author: zhjai
 license: MIT
 metadata:
@@ -139,6 +139,7 @@ claude -p '<ArenaTaskPacket with exact dirs/files>' --allowedTools 'Read,Glob,Gr
 - Use `--output-format stream-json` for anything non-trivial to watch turn-by-turn progress instead of guessing.
 - **Record each call's actuals** from the returned JSON (`duration_ms`, `duration_api_ms`, `num_turns`) and judge "stuck" against measured time, not gut feel.
 - Distinguish a real hang from normal slowness: a real hang is usually a **missing `-p`** (interactive REPL waiting on stdin) or a **tool awaiting a confirmation that was never granted** — not a long headless run.
+- **On repeated timeouts, probe the endpoint before retrying big tasks.** Run a trivial call (`codex exec 'reply OK'` or `claude -p 'reply OK'`). Returns in seconds → the endpoint is fine and the task is just heavy (shrink it / feed raw excerpts / raise the timeout). The trivial call *also* hangs or shows connection errors (websocket 404, repeated reconnects, base-url errors) → the failure is the **endpoint/proxy config**, not the task or your timeout — fix the endpoint (or switch wire protocol), don't keep retrying big tasks. Restarting processes won't fix a config-level endpoint fault.
 
 **Preflight runbook** for every headless call: pass `-p`; prefer `stream-json` above trivial; log prompt / model / allowedTools / timeout / max-turns / input source; on failure classify it (timeout / max-turns / tool-permission / stdin-wait / malformed-JSON / auth / model-unavailable / refusal); when retrying, **change exactly one variable at a time**.
 
