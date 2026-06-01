@@ -15,7 +15,7 @@
   <a href="#claude-code"><img src="https://img.shields.io/badge/Claude%20Code-portable%20skill-6b46c1" alt="Claude Code"></a>
   <a href="#openai-codex"><img src="https://img.shields.io/badge/OpenAI%20Codex-portable%20skill-111827" alt="OpenAI Codex"></a>
   <a href="#hermes-agent"><img src="https://img.shields.io/badge/Hermes%20Agent-skill-059669" alt="Hermes Agent"></a>
-  <img src="https://img.shields.io/badge/version-0.1.9-informational" alt="version">
+  <img src="https://img.shields.io/badge/version-0.1.7-informational" alt="version">
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License"></a>
 </p>
 
