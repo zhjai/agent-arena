@@ -1,7 +1,7 @@
 ---
 name: agent-arena
 description: Use when the user asks for a second opinion, independent review, sanity check, architecture red-team, red team critique, Codex-vs-Claude debate, GLM-vs-Claude comparison, DeepSeek-vs-Codex review, cross-model comparison, review my plan, challenge this design, evidence-checked code or PR review, or multi-agent critique of a high-stakes implementation plan, design decision, research claim, or bug root-cause hypothesis. Also use when the user runs Claude Code on a non-Anthropic model backend (GLM, DeepSeek, Qwen, Kimi, Doubao, or another model via an Anthropic-compatible proxy) and wants a heterogeneous second opinion. Do not use for simple lookups, formatting, or low-stakes one-step tasks.
-version: 0.1.8
+version: 0.1.9
 author: zhjai
 license: MIT
 metadata:
@@ -133,13 +133,29 @@ claude -p '<ArenaTaskPacket, approved scope, role>' --allowedTools 'Read,Glob,Gr
 claude -p '<ArenaTaskPacket with exact dirs/files>' --allowedTools 'Read,Glob,Grep' --max-turns 20 --output-format json   # larger / ambiguous
 ```
 
-**Timing & timeouts.** Cross-agent calls are slow *in both directions* — Codex→Claude and Claude→Codex both routinely take **several minutes**. Measured baselines: a minimal single-turn no-tools `claude -p` is ~6s (ttft ~3s on Opus); a multi-turn repo review runs **2–5 minutes** normally, larger ones longer. `--output-format json` stays **silent until fully done** — silence is not a hang. Therefore:
+**Timing & timeouts — treat a cross-agent call as a job with liveness, not a fixed-timeout RPC.** Latency varies wildly: the *same* codex call returned in ~30s once and hung past 9 minutes another time (ws 404 → chat fallback + xhigh reasoning). A fixed timeout is wrong both ways — too short kills a healthy slow call, too long wastes minutes on a hung one. **Judge by observed progress, not elapsed time.**
 
-- Set timeouts to match `--max-turns` (e.g. **5–10 minutes**), never 1 minute.
-- Use `--output-format stream-json` for anything non-trivial to watch turn-by-turn progress instead of guessing.
-- **Record each call's actuals** from the returned JSON (`duration_ms`, `duration_api_ms`, `num_turns`) and judge "stuck" against measured time, not gut feel.
-- Distinguish a real hang from normal slowness: a real hang is usually a **missing `-p`** (interactive REPL waiting on stdin) or a **tool awaiting a confirmation that was never granted** — not a long headless run.
-- **On repeated timeouts, probe the endpoint before retrying big tasks.** Run a trivial call (`codex exec 'reply OK'` or `claude -p 'reply OK'`). Returns in seconds → the endpoint is fine and the task is just heavy (shrink it / feed raw excerpts / raise the timeout). The trivial call *also* hangs or shows connection errors (websocket 404, repeated reconnects, base-url errors) → the failure is the **endpoint/proxy config**, not the task or your timeout — fix the endpoint (or switch wire protocol), don't keep retrying big tasks. Restarting processes won't fix a config-level endpoint fault.
+**Layer 1 — how to run & wait (pick by case):**
+
+- **Background + poll progress** — good default *only when progress is observable*: the host gives a run handle/`session_id` **and** a liveness signal (streaming events, growing output/log). If the host may silently fail to background, or buffers all output to the end (e.g. `--output-format json`), do **not** background by default — "zero output" then can't tell *never-launched* from *healthy-but-silent* from *hung*.
+- **Foreground + hard deadline + `--output-format stream-json`** — when progress isn't otherwise observable or you must block on the result. `stream-json` makes output pollable (plain `json` buffers to the end). Record `duration_ms`/`num_turns` from the result.
+- **Shrink the task** — lower reasoning effort / split / feed raw excerpts: explicit fast mode, or a deliberate downgrade after a stall.
+- **Ask the user** — only at policy boundaries (past the soft deadline, a retry would materially raise cost, or degrading changes answer quality). Not on every slow call.
+
+**Layer 2 — liveness state (judge by progress signal, not elapsed time):**
+
+- **progressing** (new output/events) → keep waiting.
+- **stalled** (observable, but no new progress past the soft deadline) → retry / ask / degrade.
+- **unobservable / orphaned** (no progress signal at all — could be never-launched, healthy-but-silent, or hung) → do **not** blindly retry (risks duplicating an expensive call) or declare failure (risks killing a healthy run); confirm via a probe or `session_id`, fall back to foreground, or wait to the hard deadline.
+- **dead** (hard error, or no heartbeat past the hard deadline) → fail; degrade to `solo_red_team` and disclose.
+
+**Deadlines:** a **soft deadline** (~1–2 min) triggers a status check / user choice; a **hard deadline** (~10 min) is the backstop.
+
+**Background needs a launch contract** — a `call_id`/`session_id`, a start acknowledgment, a heartbeat/probe method, and an attempt count. Without it, retries duplicate expensive calls and silent-but-healthy runs get misclassified as failures; on such a host use foreground + hard deadline instead.
+
+**Probe to separate endpoint-dead from task-slow.** On a stall, run a trivial call (`codex exec 'reply OK'`). If it **returns at all** — even after `ws 404` + reconnects, which auto-fall-back to chat (normal) — the endpoint works and the task is just slow; only if the trivial call **never returns** is it a real endpoint fault.
+
+**Core rule: slow-but-progressing is not failure — and "no output" is not "stalled" unless you've confirmed progress is observable.**
 
 **Preflight runbook** for every headless call: pass `-p`; prefer `stream-json` above trivial; log prompt / model / allowedTools / timeout / max-turns / input source; on failure classify it (timeout / max-turns / tool-permission / stdin-wait / malformed-JSON / auth / model-unavailable / refusal); when retrying, **change exactly one variable at a time**.
 
