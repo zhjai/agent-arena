@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.1.8
+
+- **Spec-compliant frontmatter.** Move `version` and `author` under `metadata` (`version` as a quoted string), convert `metadata.tags`/`related_skills` from YAML arrays to comma-separated strings, and drop the nested `metadata.hermes` block. The [agentskills spec](https://agentskills.io/specification) defines `metadata` as a string→string map with no top-level `version`/`author` field, so the previous frontmatter was off-spec (parsers tolerated it). Caught by a cross-environment Codex review that read the actual file against the spec — earlier summary-fed reviews never saw the frontmatter and missed it. (Note: this is unrelated to the withdrawn 0.1.8/0.1.9 timeout experiments, which were reverted; the version number is reused.)
+
 ## v0.1.7
 
 - Add `model-unavailable` to the failure taxonomy (Preflight runbook + Arena Limitations template). Reported from real use: a rejected model override (e.g. requesting `gpt-5.2-codex` on an account without access) is distinct from `auth` (authentication is fine) and `refusal` (the model declined to answer).

@@ -1,14 +1,12 @@
 ---
 name: deliberative-analysis
 description: Use when design analysis, experiment planning, architecture choices, research synthesis, or strategy decisions risk overconfidence, tunnel vision, path dependence, premature convergence, or shallow A/B framing.
-version: 0.1.0
-author: zhjai
 license: MIT
 metadata:
-  hermes:
-    tags: [deliberative-analysis, anti-overconfidence, ai-agents, agent-arena, design-review, experiment-planning, decision-making]
-    related_skills: [agent-arena]
-  tags: [deliberative-analysis, anti-overconfidence, ai-agents, agent-arena, design-review, experiment-planning, decision-making]
+  version: "0.1.1"
+  author: zhjai
+  tags: "deliberative-analysis, anti-overconfidence, ai-agents, agent-arena, design-review, experiment-planning, decision-making"
+  related_skills: "agent-arena"
 ---
 
 # Deliberative Analysis
