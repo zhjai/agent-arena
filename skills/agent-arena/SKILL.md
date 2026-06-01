@@ -3,7 +3,7 @@ name: agent-arena
 description: Use when the user asks for a second opinion, independent review, sanity check, architecture red-team, red team critique, Codex-vs-Claude debate, GLM-vs-Claude comparison, DeepSeek-vs-Codex review, cross-model comparison, review my plan, challenge this design, evidence-checked code or PR review, or multi-agent critique of a high-stakes implementation plan, design decision, research claim, or bug root-cause hypothesis. Also use when the user runs Claude Code on a non-Anthropic model backend (GLM, DeepSeek, Qwen, Kimi, Doubao, or another model via an Anthropic-compatible proxy) and wants a heterogeneous second opinion. Do not use for simple lookups, formatting, or low-stakes one-step tasks.
 license: MIT
 metadata:
-  version: "0.1.8"
+  version: "0.1.9"
   author: zhjai
   tags: "ai-agents, multi-agent, agent-arena, codex, claude-code, hermes-agent, opencode, openclaw, rag, llm-as-judge, red-team, deepseek, glm, qwen, alternative-backends, cross-model"
   related_skills: "deliberative-analysis, groundcheck"
@@ -458,6 +458,7 @@ If only one model family is available (e.g. Claude Code on DeepSeek but no Codex
 7. **Forgetting degradation disclosure** — state which agents or checks failed.
 8. **Letting the judge know authors unnecessarily** — blind judging reduces halo effects.
 9. **Leaking sensitive context** — minimize and redact before external delegation.
+10. **Reviewing from a summary instead of the raw file** — format / structure / spec-compliance problems (frontmatter, schema, config, exact YAML) live in the precise text; a reviewer fed only a summary is blind to them. For those checks, give the reviewer the actual file, not your paraphrase. (This skill's own frontmatter stayed off-spec through many summary-fed reviews until one file-reading review caught it.)
 
 ## Example Prompts
 

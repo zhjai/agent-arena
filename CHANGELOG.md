@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.1.9
+
+- Add Common Mistake #10 — **reviewing from a summary instead of the raw file**. Format / structure / spec-compliance problems (frontmatter, schema, config, exact YAML) live in the precise text, so a summary-fed reviewer is blind to them; give the reviewer the actual file for those checks. Captures the lesson from v0.1.8: the skill's own frontmatter stayed off-spec through many summary-fed Codex reviews until one file-reading review caught it.
+
 ## v0.1.8
 
 - **Spec-compliant frontmatter.** Move `version` and `author` under `metadata` (`version` as a quoted string), convert `metadata.tags`/`related_skills` from YAML arrays to comma-separated strings, and drop the nested `metadata.hermes` block. The [agentskills spec](https://agentskills.io/specification) defines `metadata` as a string→string map with no top-level `version`/`author` field, so the previous frontmatter was off-spec (parsers tolerated it). Caught by a cross-environment Codex review that read the actual file against the spec — earlier summary-fed reviews never saw the frontmatter and missed it. (Note: this is unrelated to the withdrawn 0.1.8/0.1.9 timeout experiments, which were reverted; the version number is reused.)
