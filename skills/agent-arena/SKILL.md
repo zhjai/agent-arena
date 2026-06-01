@@ -1,7 +1,7 @@
 ---
 name: agent-arena
 description: Use when the user asks for a second opinion, independent review, sanity check, architecture red-team, red team critique, Codex-vs-Claude debate, GLM-vs-Claude comparison, DeepSeek-vs-Codex review, cross-model comparison, review my plan, challenge this design, evidence-checked code or PR review, or multi-agent critique of a high-stakes implementation plan, design decision, research claim, or bug root-cause hypothesis. Also use when the user runs Claude Code on a non-Anthropic model backend (GLM, DeepSeek, Qwen, Kimi, Doubao, or another model via an Anthropic-compatible proxy) and wants a heterogeneous second opinion. Do not use for simple lookups, formatting, or low-stakes one-step tasks.
-version: 0.1.6
+version: 0.1.7
 author: zhjai
 license: MIT
 metadata:
@@ -140,7 +140,9 @@ claude -p '<ArenaTaskPacket with exact dirs/files>' --allowedTools 'Read,Glob,Gr
 - **Record each call's actuals** from the returned JSON (`duration_ms`, `duration_api_ms`, `num_turns`) and judge "stuck" against measured time, not gut feel.
 - Distinguish a real hang from normal slowness: a real hang is usually a **missing `-p`** (interactive REPL waiting on stdin) or a **tool awaiting a confirmation that was never granted** — not a long headless run.
 
-**Preflight runbook** for every headless call: pass `-p`; prefer `stream-json` above trivial; log prompt / model / allowedTools / timeout / max-turns / input source; on failure classify it (timeout / max-turns / tool-permission / stdin-wait / malformed-JSON / auth / refusal); when retrying, **change exactly one variable at a time**.
+**Preflight runbook** for every headless call: pass `-p`; prefer `stream-json` above trivial; log prompt / model / allowedTools / timeout / max-turns / input source; on failure classify it (timeout / max-turns / tool-permission / stdin-wait / malformed-JSON / auth / model-unavailable / refusal); when retrying, **change exactly one variable at a time**.
+
+**Do not pin a specific model version** (e.g. a particular gpt/codex/claude build such as `gpt-5.2-codex`) unless you have confirmed the account can access it — prefer the default model. A rejected model override is `model-unavailable` (distinct from `auth`, where authentication itself is fine, and `refusal`, where the model declines to answer); on it, retry once with the **default model** (drop the override).
 
 If Claude returns JSON with `subtype: error_max_turns`, do **not** treat that as Claude Code being unavailable or as a substantive arena answer. Retry once with either (a) a higher turn cap and narrower approved scope, or (b) no tools plus Codex-supplied raw excerpts (never conclusions). Retry only **once** — do not loop; if it still fails, surface a clear stop / narrow-scope / retry recommendation to the user and disclose the degraded continuity.
 
@@ -351,7 +353,7 @@ If a cross-agent call failed or the arena ran degraded, you **must** end the use
 ## Arena Limitations
 
 - Failed agents:
-- Failure type: timeout / max-turns / tool-permission / stdin-wait / malformed-JSON / auth / refusal
+- Failure type: timeout / max-turns / tool-permission / stdin-wait / malformed-JSON / auth / model-unavailable / refusal
 - Missing checks:
 - Degraded mode used:
 - Confidence impact:

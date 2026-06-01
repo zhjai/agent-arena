@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.1.7
+
+- Add `model-unavailable` to the failure taxonomy (Preflight runbook + Arena Limitations template). Reported from real use: a rejected model override (e.g. requesting `gpt-5.2-codex` on an account without access) is distinct from `auth` (authentication is fine) and `refusal` (the model declined to answer).
+- Add guidance: do not pin a specific model version unless the account is confirmed to support it; prefer the default model. The standard retry for `model-unavailable` is to drop the override and re-run with the default model.
+
 ## v0.1.6
 
 - Add interop hook to the companion skill [`groundcheck`](https://github.com/zhjai/groundcheck): a single-agent, evidence-grounded fact-gate. After independent generation, run groundcheck per answer; `refuted` claims are sent back to their `source_agent` (with evidence, not conclusions) before cross-critique, catching factual errors before debate can reinforce a shared hallucination. Adds groundcheck to `related_skills`. Frames the pair as "two depths of one verification stack": agent-arena (multi-agent debate, overconfidence) + groundcheck (single-agent verification, hallucination).
