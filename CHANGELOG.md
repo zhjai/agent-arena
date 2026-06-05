@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.2.0
+
+- **Fix: `error_max_turns` handling — mode-first diagnosis + lossless/lossy escalation rule.** Root cause traced from a real session (castmind eval ops, 2026-06-05): an open design/architecture question was mis-boxed as bounded verification, producing `stop_reason: tool_use` + no answer at `--max-turns 2` then `4`. Old rule ("retry with higher cap, narrower scope, or no-tools summary") was backwards — narrowing or disabling tools damages independent judgment, the core thing arena protects. New rule, arena-reviewed (two Codex heterogeneous rounds):
+  - **Mode-first** (`FIRST decide the review MODE`): open design/architecture tasks REQUIRE broad read-only access (`Read,Glob,Grep,Bash`-readonly) + ample turns; narrowing is both contamination (orchestrator picks evidence) and starvation (reviewer can't form independent judgment). Bounded verification is the only mode where the read/analyze split and narrow tools are correct.
+  - **Auto-retry with lossless moves only**: resume session, raise `--max-turns`, inject turn-budget contract into prompt ("you have N turns; judge disputes only; avoid exploration"), or add soft prompt hints about likely files (keeps `Read,Glob,Grep` broad — this is lossless). Dropping `Glob,Grep` is only safe when the evidence set is provably closed.
+  - **Human gate for lossy moves**: disabling `Read`, hard CLI scope narrowing (`--add-dir`/`--allowedTools` create hard walls the reviewer cannot expand), fixed excerpts the reviewer cannot go beyond, or accepting a no-critique degraded result — these are the user's tradeoff, not the orchestrator's to make silently.
+  - Updated line 428 (Codex quick-ref) to match. Fixed old line 145 which listed "narrower scope" as a default retry option.
+
 ## v0.1.9
 
 - Add Common Mistake #10 — **reviewing from a summary instead of the raw file**. Format / structure / spec-compliance problems (frontmatter, schema, config, exact YAML) live in the precise text, so a summary-fed reviewer is blind to them; give the reviewer the actual file for those checks. Captures the lesson from v0.1.8: the skill's own frontmatter stayed off-spec through many summary-fed Codex reviews until one file-reading review caught it.
