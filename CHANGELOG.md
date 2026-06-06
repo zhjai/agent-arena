@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.2.1
+
+- **Fix: the v0.2.0 error_max_turns rule lived only in the SKILL.md body, so Codex never applied it.** Codex loads only a skill's one-line `description` into context, not the body — so the new "lossless retry / STOP-and-ask before lossy moves" rule was invisible to it. Real recurrence: Codex hit error_max_turns, then auto-retried by telling the reviewer to **stop using tools and answer directly** — exactly the LOSSY move v0.2.0 said requires user approval (disabling the reviewer's tools damages heterogeneous independence), done without asking. Now the hard rule is embedded in the `description` itself: on error_max_turns → mode-check first, auto-retry ONCE with lossless moves only, and disabling tools / feeding excerpts / narrowing scope are LOSSY → never automatic, STOP and ask the user. (Same fix pattern as agent-completion-gate v0.4.3.) Single-quoted, 1009/1024 chars, single-line, YAML-valid.
+
+
 ## v0.2.0
 
 - **Fix: `error_max_turns` handling — mode-first diagnosis + lossless/lossy escalation rule.** Root cause traced from a real session (castmind eval ops, 2026-06-05): an open design/architecture question was mis-boxed as bounded verification, producing `stop_reason: tool_use` + no answer at `--max-turns 2` then `4`. Old rule ("retry with higher cap, narrower scope, or no-tools summary") was backwards — narrowing or disabling tools damages independent judgment, the core thing arena protects. New rule, arena-reviewed (two Codex heterogeneous rounds):

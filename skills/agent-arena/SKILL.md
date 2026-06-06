@@ -1,9 +1,9 @@
 ---
 name: agent-arena
-description: Use when the user asks for a second opinion, independent review, sanity check, architecture red-team, red team critique, Codex-vs-Claude debate, GLM-vs-Claude comparison, DeepSeek-vs-Codex review, cross-model comparison, review my plan, challenge this design, evidence-checked code or PR review, or multi-agent critique of a high-stakes implementation plan, design decision, research claim, or bug root-cause hypothesis. Also use when the user runs Claude Code on a non-Anthropic model backend (GLM, DeepSeek, Qwen, Kimi, Doubao, or another model via an Anthropic-compatible proxy) and wants a heterogeneous second opinion. Do not use for simple lookups, formatting, or low-stakes one-step tasks.
+description: 'Use when the user asks for a second opinion, independent review, sanity check, architecture red-team, cross-model critique (Codex/Claude/GLM/DeepSeek/Qwen/Kimi/Doubao), review my plan, challenge this design, evidence-checked code/PR review, or multi-agent critique of a high-stakes plan, design decision, research claim, or bug root-cause. Also use when running Claude Code on a non-Anthropic backend via an Anthropic-compatible proxy for a heterogeneous second opinion. Not for simple lookups, formatting, or low-stakes tasks. On error_max_turns before any answer: mechanical failure, not a result — first check if you boxed an open design/architecture review (needs broad read-only tools + ample turns) as bounded verification. Auto-retry ONCE with lossless moves only (resume, raise --max-turns, add a turn-budget contract). Disabling the reviewer''s tools, feeding excerpts instead of letting it read, or narrowing scope are LOSSY (kill heterogeneous independence) — never automatic; STOP and ask the user.'
 license: MIT
 metadata:
-  version: "0.2.0"
+  version: "0.2.1"
   author: zhjai
   tags: "ai-agents, multi-agent, agent-arena, codex, claude-code, hermes-agent, opencode, openclaw, rag, llm-as-judge, red-team, deepseek, glm, qwen, alternative-backends, cross-model"
   related_skills: "deliberative-analysis, groundcheck"
