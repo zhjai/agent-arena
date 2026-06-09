@@ -1,9 +1,9 @@
 ---
 name: deliberative-analysis
-description: Use when design analysis, experiment planning, architecture choices, research synthesis, or strategy decisions risk overconfidence, tunnel vision, path dependence, premature convergence, or shallow A/B framing.
+description: 'Use when comparing non-trivial options or making a design/architecture/experiment/product/research/strategy decision with real tradeoffs, unclear criteria, or commitment risk, and the user says things like "比较一下 A 和 B", "还有别的方案吗", "方案的利弊/权衡是什么", "这样设计好不好", "换个角度", "深入分析", "review my plan", "compare A vs B vs A+B", "what are the alternatives", "what are the tradeoffs", "is this the right approach", or "think this through". Also self-trigger when you only have A/B/A+B, the options are minor variants, success criteria or flip conditions are unclear, or one hidden assumption is deciding the answer; expand the option space and challenge the framing before choosing. Escalate to agent-arena when external evidence or an independent reviewer is needed. Not for simple lookups, formatting, translation, trivial naming/style choices, routine code review without design uncertainty, or when the user asked for a fast answer.'
 license: MIT
 metadata:
-  version: "0.1.1"
+  version: "0.1.2"
   author: zhjai
   tags: "deliberative-analysis, anti-overconfidence, ai-agents, agent-arena, design-review, experiment-planning, decision-making"
   related_skills: "agent-arena"
