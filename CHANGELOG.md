@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.2.3
+
+- **Fix: arena could blow up the orchestrator's own context and loop forever.** New failure mode, observed in a real 910b Codex session (Time-R1 reproduction, ~7h, 7.6 MB / 3343 records): each `claude -p` review packet was ~15 KB, and with multi-round critique the big prompt + the counterpart's long JSON output got narrated back into Codex's *own* context. That repeatedly tripped auto-compaction; compaction summarized away the arena's mid-flight state (round, verdict-so-far); Codex then re-launched arena from scratch, which re-inflated context, which compacted again — dozens of compactions each followed by a fresh arena call. Added an **"Orchestrator-side context budget"** rule (body + description), hardened over two Codex arena rounds:
+  - **Stage the packet out-of-band** (via stdin/file) — inlining a 15 KB `'<packet>'` in the tool call pollutes the transcript even when the *output* is redirected.
+  - **Redirect output to a file; read back only a small structured digest** (`recommendation`, `key_disagreements`, `uncertainties`, `what_would_change_mind`, `requested_evidence`) — never `cat` the raw JSON. A free-form "verdict" is too lossy and can drop the minority view this skill exists to preserve (principle #6); the raw file stays the source of truth.
+  - **Checkpoint each round to disk** (`round`, `session_id`, raw path, digest) so compaction can't force a re-run — you re-read the checkpoint and resume the *same* arena.
+  - Tools-off applies to **bounded** critique only; open design/self-discovery still requires broad read-only tools + ample turns (cross-refs the MODE rule, so this doesn't starve an open review).
+  - Large verdicts / many rounds: per-round archive files + a small index; never reread the archive wholesale; start a fresh session carrying only the on-disk checkpoint if the current one is already huge.
+
 ## v0.2.2
 
 - **Fix: `deliberative-analysis` triggered too rarely.** Its description was abstract failure-mode jargon only ("risk overconfidence, tunnel vision, premature convergence, shallow A/B framing") — which (a) required the agent to first self-diagnose overconfidence, the very thing an overconfident agent won't notice, and (b) contained zero phrases a user actually says, so intent-matching rarely fired. Rewrote the description around real user utterances ("比较一下 A 和 B", "还有别的方案吗", "方案的利弊/权衡", "compare A vs B vs A+B", "what are the tradeoffs", "is this the right approach") plus checkable self-trigger cues ("you only have A/B/A+B", "options are minor variants", "flip conditions unclear", "one hidden assumption is deciding the answer"). Guarded against over-firing (Codex arena round): positive gate requires non-trivial options / real tradeoffs / commitment risk, and excludes trivial naming/style choices, routine review, and fast-answer requests. 922/1024 chars, single-line, YAML-valid.
