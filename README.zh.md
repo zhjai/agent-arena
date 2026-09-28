@@ -11,7 +11,7 @@
   <a href="#claude-code"><img src="https://img.shields.io/badge/Claude%20Code-portable%20skill-6b46c1" alt="Claude Code"></a>
   <a href="#openai-codex"><img src="https://img.shields.io/badge/OpenAI%20Codex-portable%20skill-111827" alt="OpenAI Codex"></a>
   <a href="#hermes-agent"><img src="https://img.shields.io/badge/Hermes%20Agent-skill-059669" alt="Hermes Agent"></a>
-  <img src="https://img.shields.io/badge/version-0.1.9-informational" alt="version">
+  <img src="https://img.shields.io/badge/version-0.2.7-informational" alt="version">
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License"></a>
 </p>
 
@@ -197,11 +197,13 @@ skills/deliberative-analysis/SKILL.md
 
 若你的 agent 有自定义 skill 目录，将完整 skill 文件夹复制进去即可。否则将相关 `SKILL.md` 粘贴为指令说明。支持程度取决于宿主 agent，本仓库不提供平台专属的运行时适配器。
 
+首次在项目中调用 Arena 时，先用最小无害 completion 预检默认路线，再用一句话确认要记住的参与者路线。若默认路线失败，在同一次设置交互中只展示已经通过预检的替代路线；不得静默切换，也不要再发起第二轮路线问卷。用户点名的替代 harness 必须先预检，之后才保存或启动。路线预检不等于允许发送项目内容；向外部 agent 开放仓库或发送私有内容前，每次都要单独说明范围并取得用户批准。路线配置与运行产物应放在工作树外，或由宿主加入窄范围 `.gitignore`，不要默认提交。中文中可直接说“需要 arena”“讨论一下”“审核一下”“提交前审核”或“继续”；后者只有在存在未完成 checkpoint 时才恢复 Arena，否则继续普通任务。
+
 ## 默认跨 agent 规则
 
-- 在 **Codex** 内运行时，若可用且被允许，默认邀请 **Claude Code** 作为对手。若有 shell 访问权限，Codex 应在降级到同模型子 agent 前先检查 `command -v claude && claude --version`；即使 Claude Code 未作为内置子 agent 工具暴露，外部 `claude` CLI 也算真正的异构对手。上下文最小化不应妨碍有效评审：允许 Claude Code 在已批准的仓库范围内读取相关源代码、文档、测试，但排除密钥、数据集、生成结果、私有日志及无关目录。对于非简单任务，应运行多轮批判/修正，而非单次调用。若用户要求共同设计或构建某物，使用 `collaborative_design` 模式，将 Claude Code 定位为共同设计者/架构合作方，而非仅仅是评审者。
-- 在 **Claude Code** 内运行时，若可用且被允许，默认邀请 **Codex** 作为对手。若有 shell 访问权限，先检查 `command -v codex && codex --version`。
-- 在 **Hermes Agent**、**OpenClaw** 或其他编排器内运行时，若可用则默认同时纳入 Codex 和 Claude Code。
+- 在 **Codex** 内运行时，若可用且被允许，默认邀请 **Claude Code** 作为对手。若有 shell 访问权限，Codex 应在降级到同模型子 agent 前先检查 `command -v claude && claude --version`；即使 Claude Code 未作为内置子 agent 工具暴露，外部 `claude` CLI 也算真正的异构对手。上下文最小化不应妨碍有效评审：允许 Claude Code 在已批准的仓库范围内读取相关源代码、文档、测试，但排除密钥、数据集、生成结果、私有日志及无关目录。证据集已经闭合时，传递带路径和行号的原始摘录，不要传递编排器自己的总结。对于非简单任务，应运行多轮批判/修正，而非单次调用。若用户要求共同设计或构建某物，使用 `collaborative_design` 模式，将 Claude Code 定位为共同设计者/架构合作方，而非仅仅是评审者。
+- 在 **Claude Code** 内运行时，先复用已保存路线或本次明确指定的路线；没有时才在预检后默认邀请 **Codex** 作为异构对手。若有 shell 访问权限，先检查 `command -v codex && codex --version`，每次复用路线都重新核对模型家族。
+- 在 **Hermes Agent**、**OpenClaw** 或其他编排器内运行时，遵循相同的首次路线确认和预检规则；路线设置完成前不要同时启动两个 agent。
 - 若对手不可用，须披露降级模式，不得伪装同模型角色扮演等同于异构对手。
 - 若任务涉及私有或敏感材料，须在发送给其他 agent 或服务前获得许可并最小化/脱敏上下文。
 
@@ -255,7 +257,7 @@ AI agent skill · Claude Code skill · OpenAI Codex skill · Hermes Agent skill 
 
 ## 版本说明
 
-当前发布线：`v0.1.x` 预览版。各版本 tag 已在 [Releases 页面](https://github.com/zhjai/agent-arena/releases)发布——可固定到某个 tag 以获得可复现安装，或跟踪 `main` 获取尚未发布的最新改动。
+当前发布线以仓库 skill 元数据为准。各版本 tag 已在 [Releases 页面](https://github.com/zhjai/agent-arena/releases)发布——可固定到某个 tag 以获得可复现安装，或跟踪 `main` 获取尚未发布的最新改动。
 
 ```bash
 # 固定到指定版本（把 v0.1.4 换成你想要的 tag）

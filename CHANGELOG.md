@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.2.7
+
+- **Improve Arena invocation ergonomics and continuity.** Add short natural-language triggers, infer the review mode and target, and reserve a bare `继续` for an unfinished Arena checkpoint.
+- **Add first-use participant-route setup.** Preflight the default heterogeneous harness, ask once which passing route to remember, persist the project route without credentials, revalidate model-family heterogeneity on each run, and never silently switch providers or model families.
+- **Make Arena state explicit.** Persist per-round checkpoints with route metadata, commit-gate state, structured digests, dissent, blocker coverage, and retry accounting. Distinguish resumable mechanical failures from authentication, model-availability, and refusal failures that require user action.
+- **Clarify privacy and commit safety.** Route preflight does not authorize project-content transfer; external repository access requires per-run scope approval. Pre-commit reviews must cover all pending changes, and `.arena/` artifacts are ignored by default.
+- **Synchronize portable documentation.** Update the English and Chinese READMEs with route setup, continuation, raw-evidence, degraded-mode, and host-local artifact guidance.
+
 ## v0.2.6
 
 - **Fix: v0.2.4's root/sudo rule hardcoded `--permission-mode default`, which is a legacy alias already removed from validation once.** Caught by a *candidate lesson* an agent had written on this machine's H100 project back on 2026-07-16 — which had never been promoted to project authority, so the knowledge sat unused in `state/` while this repo shipped the fragile rule anyway. Its claim: "Claude Code 2.1.211 removed the previously used `default` choice… inspect the installed CLI version and supported permission-mode choices; use an explicitly supported read-only mode." Verified on 2.1.222: `--permission-mode` **is** validated (`argument 'bogusmode' is invalid. Allowed choices are acceptEdits, auto, bypassPermissions, manual, dontAsk, plan`), and `default` **still functions but is absent from that list** — a hidden alias one upgrade away from breaking a pinned call site. The rule now says to **preflight `claude --help | grep -A3 -- --permission-mode` and pick an explicitly supported read-only mode (`plan` on current builds)** rather than naming one. The reason for the override is unchanged (a root account defaulting to `bypassPermissions` makes `claude -p` refuse to launch). Cross-reference in the `num_turns: 1–2` fingerprint updated.
