@@ -15,7 +15,7 @@
   <a href="#claude-code"><img src="https://img.shields.io/badge/Claude%20Code-portable%20skill-6b46c1" alt="Claude Code"></a>
   <a href="#openai-codex"><img src="https://img.shields.io/badge/OpenAI%20Codex-portable%20skill-111827" alt="OpenAI Codex"></a>
   <a href="#hermes-agent"><img src="https://img.shields.io/badge/Hermes%20Agent-skill-059669" alt="Hermes Agent"></a>
-  <img src="https://img.shields.io/badge/version-0.2.7-informational" alt="version">
+  <img src="https://img.shields.io/badge/version-0.2.8-informational" alt="version">
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License"></a>
 </p>
 
@@ -95,6 +95,18 @@ Core principle:
 - Experiment planning and design-space exploration
 - Avoiding shallow A vs B vs A+B reasoning
 - Cross-model backend comparison (GLM-backed Claude Code vs Codex, DeepSeek vs Claude, Qwen vs GPT)
+
+## Supervised execution
+
+Use `supervised_execution` when the primary agent should remain the executor while Arena directs and verifies the work. Arena first turns the user's request into a detailed answer or an exact next step. The primary agent executes only that step, returns raw evidence, and waits for Arena's `PASS`, `RETRY`, or `BLOCKED` result before proceeding. Answer-only requests also return to Arena for a final check. Every step is checkpointed, and the run ends only after the exact final approval `APPROVED: task complete`.
+
+This mode is unlimited by default: forward the complete relevant request and evidence, allow open tool and file discovery, and do not impose content, context, turn, step, or elapsed-time budgets. A limit is applied only when the user explicitly supplies one, and that limit is disclosed in the launch notice and checkpoint. Privacy, credential redaction, least privilege, irreversible-action approval, and liveness protections still apply.
+
+Typical request:
+
+```text
+Use complete Arena mode to handle this task. Let Arena plan and check every step, and report which steps succeeded or failed and why.
+```
 
 ## Capability and safety boundaries
 
@@ -248,6 +260,9 @@ Agent Arena supports these modes:
 - `decision_memo_arena` — high-stakes recommendation with dissent and uncertainty.
 - `tree_search` — explore a large option space with branching strategies.
 - `full_arena` — independent generation, evidence, critique, revision, blind judging, synthesis.
+- `supervised_execution` — Arena plans and verifies each Arena-authorized execution step; the primary agent executes the first planned step and later steps after Arena's `PASS`, returns evidence, and only then relays the detailed answer after the final check. Answer-only requests receive the same final check. The run cannot finish until Arena returns `APPROVED: task complete`. Unlimited content and execution budget are the default unless the user specifies a limit.
+
+`supervised_execution` is distinct from `full_arena`: “complete arena” / “完全体 arena” selects supervisor-driven execution, while `full_arena` is the independent debate and synthesis workflow.
 
 ## Related topics and search terms
 

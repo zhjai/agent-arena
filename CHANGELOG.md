@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.2.8
+
+- **Add `supervised_execution` mode.** Arena plans and verifies; the primary agent executes one Arena-authorized step at a time and returns raw evidence; every step is checked, answer-only requests receive a final Arena review, and only `APPROVED: task complete` completes the run. Content, context, tool discovery, turns, step attempts, and elapsed time are unlimited unless the user sets a limit; privacy, redaction, least privilege, irreversible-action human approval, and liveness protections still apply.
+- **Identify the execution mode and participants.** State the mode, its purpose, open/bounded scope, and participant models before launch and at close-out; disclose changes and distinguish planned or configured identities from verified execution.
+- **Report every Arena outcome explicitly.** Always list successful, failed, and unfinished or unexecuted work, with evidence and observed failure causes. Preserve recovered failures, distinguish unknown causes from hypotheses, and report blocking findings separately from successful review execution.
+
 ## v0.2.7
 
 - **Improve Arena invocation ergonomics and continuity.** Add short natural-language triggers, infer the review mode and target, and reserve a bare `继续` for an unfinished Arena checkpoint.

@@ -11,7 +11,7 @@
   <a href="#claude-code"><img src="https://img.shields.io/badge/Claude%20Code-portable%20skill-6b46c1" alt="Claude Code"></a>
   <a href="#openai-codex"><img src="https://img.shields.io/badge/OpenAI%20Codex-portable%20skill-111827" alt="OpenAI Codex"></a>
   <a href="#hermes-agent"><img src="https://img.shields.io/badge/Hermes%20Agent-skill-059669" alt="Hermes Agent"></a>
-  <img src="https://img.shields.io/badge/version-0.2.7-informational" alt="version">
+  <img src="https://img.shields.io/badge/version-0.2.8-informational" alt="version">
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License"></a>
 </p>
 
@@ -97,6 +97,18 @@ Agent Arena 提供一个可复用的协议：
 - 实验规划与设计空间探索
 - 避免浅层的 A vs B vs A+B 推理
 - 跨模型后端对比（GLM 驱动的 Claude Code vs Codex、DeepSeek vs Claude、Qwen vs GPT）
+
+## 完全体 Arena：全程监督执行
+
+需要主 agent 代为执行、但希望 Arena 负责理解请求、制定详细计划并逐步验收时，使用 `supervised_execution`。Arena 先给出详细答复或唯一的下一步；主 agent 只执行该步，回传原始证据，等待 Arena 返回 `PASS`、`RETRY` 或 `BLOCKED`。只有 Arena 检查通过后才进入下一步；仅需答复的请求也要把答复送回 Arena 做最终检查。每一步都写入 checkpoint，只有 Arena 返回精确终态 `APPROVED: task complete` 才能结束。
+
+该模式默认不限制内容和预算：完整转发相关请求与证据，允许开放式工具和文件探索，不预设内容、上下文、回合、步骤或耗时上限。只有用户明确指定参数时才设置限制，并在启动说明和 checkpoint 中披露。隐私、凭据脱敏、最小权限、不可逆操作人工授权和活性保护仍然有效。
+
+典型请求：
+
+```text
+使用完全体 Arena 处理这个任务。让 Arena 规划并检查每一步，最后明确报告哪些成功、哪些失败及原因。
+```
 
 ## 能力边界与安全限制
 
@@ -250,6 +262,9 @@ Agent Arena 支持以下模式：
 | `decision_memo_arena` | 高风险建议，含异议与不确定性 |
 | `tree_search` | 分支策略探索大型选项空间 |
 | `full_arena` | 完整流程：独立生成、证据核查、批判、修正、盲评、综合 |
+| `supervised_execution` | Arena 逐步规划和验收；主 agent 执行首个计划步骤，后续步骤在 Arena 返回 `PASS` 后继续，并回传证据，最终复核后再转发详细答复。遇到 `RETRY` 按修正指令重试，遇到 `BLOCKED` 停下处理。仅需答复的请求也要最终复核，只有 `APPROVED: task complete` 才能结束。内容和执行预算默认不设限，除非用户明确指定。 |
+
+`supervised_execution` 与 `full_arena` 不同：“完全体 arena” / “complete arena” 选择前者的监督执行流程，`full_arena` 仍是独立生成、批判和综合流程。
 
 ## 相关主题与搜索词
 

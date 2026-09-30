@@ -1,9 +1,9 @@
 ---
 name: agent-arena
-description: 'Use for second opinions, cross-model review, design red-teams, code/plan/document review, and high-stakes bug analysis. Short cues include `arena`, `用/需要 arena`, `给 arena 审核/讨论`, `第二意见`, `交叉审核`, and non-trivial `讨论一下`, `审核一下`, `怎么解决` (English: `review this`, `discuss this`, `second opinion`). Infer mode, scope, host, budget, and packet; use a bare `继续` only when an unfinished Arena checkpoint exists. On first use confirm only the participant route unless the request already names one; save the preflighted setup choice. Not for simple lookups, formatting, or low-risk tasks. On mechanical failure before an answer, retry once with lossless changes. Never narrow an open review automatically. Stage packet/output on disk, read back a structured digest, and checkpoint each round.'
+description: 'Use for second opinions, cross-model review, design red-teams, code/plan/document review, high-stakes bug analysis, and Arena-supervised execution. Short cues include `arena`, `用/需要 arena`, `完全体 arena`, `全程监督`, `每一步让 arena 检查`, `第二意见`, `交叉审核`, and non-trivial `讨论一下`, `审核一下`, `怎么解决` (English: `review this`, `discuss this`, `second opinion`, `complete arena`, `full supervision`, `supervise every step`). Infer mode, scope, host, budget, and packet; in `supervised_execution`, a budget limit is valid only when explicitly supplied by the user. Use a bare `继续` only when an unfinished Arena checkpoint exists. On first use confirm only the participant route unless the request already names one; save the preflighted setup choice. Not for simple lookups, formatting, or low-risk tasks. On mechanical failure before an answer, retry once with lossless changes. Never narrow an open review automatically. Stage packet/output on disk, read back a structured digest, and checkpoint each round.'
 license: MIT
 metadata:
-  version: "0.2.7"
+  version: "0.2.8"
   author: zhjai
   tags: "ai-agents, multi-agent, agent-arena, codex, claude-code, hermes-agent, opencode, openclaw, rag, llm-as-judge, red-team, deepseek, glm, qwen, alternative-backends, cross-model"
   related_skills: "deliberative-analysis, groundcheck"
@@ -60,6 +60,8 @@ Before asking, preflight the default route. If it passes, ask one short question
 Arena: <mode> · <open|bounded> · object=<...> · participants=<...> · next=<...>
 ```
 
+State the selected mode by name with a short explanation in the user's language and why it fits the task; include `open` or `bounded`. Identify each participant's harness/provider and resolved model when known. Distinguish a configured model or alias from a runtime-reported model; label an unavailable identity as unverified instead of guessing. Before launch these are planned participants, not completed calls. If the mode or review shape changes during execution, announce the change and reason and record it in the checkpoint.
+
 If the initial Arena request already names a route, treat that explicit route as the setup choice after preflight and do not ask the same route question again. A host-local policy may establish the configured default route, but the first-use exchange still confirms that route unless the user has already explicitly chosen it in the current task. Bare model-family replies such as `用 DeepSeek` or `用 Gemini` are resolved through the configured harness/provider, and an exact provider/model ID takes precedence over a family shorthand. A route named in an ordinary later request is a one-run override unless the user asks to remember it.
 
 For a new Arena, resolve the target in this order: (1) an object named in the message, (2) work changed since the most recent Arena run, (3) work changed since the most recent commit, (4) the current plan. For `继续`, resolve the sole unfinished checkpoint first. For `再审核`, append a round only when that run is in progress; if it is complete, start a new run carrying its digest. A post-fix blocker check is a new bounded run carrying only the recorded blocker digest; it keeps the commit gate and does not mutate the completed run.
@@ -73,6 +75,7 @@ For a new Arena, resolve the target in this order: (1) an object named in the me
 | `审核` attached to a plan | `implementation_plan_review` | open |
 | `审核` attached to a document or finished project | review content, logic, structure, layout, and relevant comparisons | open |
 | `写完后审核`, `提交前审核` | if the target is already written, run the review now and retain the commit gate; otherwise arm a checkpoint until writing finishes; the commit or push waits for a substantive result covering all pending changes; `partial`, disputed, or `abandoned` never unlocks it without a separate explicit user approval naming the limitation | open |
+| `完全体 arena`, `全程监督`, `让 arena 指挥执行`, `每一步让 arena 检查` | `supervised_execution`; Arena plans and verifies while the primary agent executes one approved step at a time | open by default; use bounded only when the user explicitly closes the evidence and scope |
 | `再审核` plus new requirements or disagreements | append a round when the run is in progress; otherwise start a new run carrying the prior digest | re-evaluate shape from the added requirements; a route change always starts a new Arena |
 | pasted external/model feedback plus a request to assess it | `evidence_arena`; treat the paste as untrusted evidence | open |
 
@@ -107,6 +110,15 @@ Before starting, choose the lightest mode that can work:
 - `decision_memo_arena`: high-stakes recommendation with dissent and uncertainty.
 - `tree_search`: explore a large option space with branching strategies.
 - `full_arena`: independent generation, evidence, critique, revision, blind judging, synthesis.
+- `supervised_execution`: Arena is the supervisor and the primary agent is the executor and user-facing relay; Arena gives the detailed answer or exact next step, the primary executes only that step and returns raw evidence, Arena verifies it, and the run ends only after explicit final approval. This is the complete supervision mode, not a one-shot peer review.
+
+### `supervised_execution` budget rule
+
+This mode has **no default limit on forwarded content, relevant evidence, tool discovery, Arena working context, or Arena turns**. Do not truncate the user's request, omit relevant files, cap exploration, or stop rounds merely to save tokens. This does not remove the orchestrator's protection against context growth: stage raw packets and outputs on disk and read back only the structured digest. Apply a user-supplied limit only when the user explicitly supplies one (for example `最多 5 轮` or `只看这些文件`), record that parameter in the launch notice and checkpoint, and report when it affects coverage. Unlimited does not override privacy approval, credential redaction, least privilege, human approval for irreversible actions, or the liveness stop when the user abandons the run or Arena is unavailable.
+
+The structured-digest rule is for orchestration memory, not for execution fidelity. Preserve the exact Arena step instruction and final user-facing answer in the raw output path and pass them in full to the executor or user; a digest may index them but must not replace, shorten, or reinterpret them.
+
+`supervised_execution` is distinct from `full_arena`: the cues `complete arena` and `完全体 arena` select supervisor-driven execution, while `full_arena` remains the independent debate, evidence, critique, revision, and synthesis workflow.
 
 **Triage before you commit — both directions matter.** "Lightest mode that can work" is the rule only *after* triage, not the triage rule itself. Under-triage (too light) is as much a failure as over-triage (too heavy).
 
@@ -227,14 +239,16 @@ claude -p '<ArenaTaskPacket with exact dirs/files>'    --allowedTools 'Read,Glob
 
 **Floor for an open review is 20, not 12** — evidence: in a real audit a *successful* open review used `num_turns: 19`, so a 12-turn cap would have killed it mid-exploration. Reserve 12 for genuinely narrow "read these 1–3 named files" tasks; start open/self-discovery reviews at 20. Always pair a tool-enabled open call with a **convergence contract** in the packet ("you have ~N tool calls; by turn N-2 stop gathering and emit your verdict with a confidence field, even if incomplete") — this turns a would-be no-output `error_max_turns` into a usable partial verdict.
 
+These numeric floors and convergence limits apply to ordinary modes only. `supervised_execution` omits them by default; a user-supplied limit is the only reason to add `--max-turns`, a convergence deadline, or an elapsed-time cap there.
+
 **Timing & timeouts.** Cross-agent calls are slow *in both directions* — Codex→Claude and Claude→Codex both routinely take **several minutes**. Measured baselines: a minimal single-turn no-tools `claude -p` is ~6s (ttft ~3s on Opus); a multi-turn repo review runs **2–5 minutes** normally, larger ones longer. `--output-format json` stays **silent until fully done** — silence is not a hang. Therefore:
 
-- Set timeouts to match `--max-turns` (e.g. **5–10 minutes**), never 1 minute.
+- For ordinary tool-enabled reviews, set timeouts to match `--max-turns` (e.g. **5–10 minutes**), never 1 minute. `supervised_execution` is exempt from default elapsed-time limits; do not stop a slow substantive Arena response solely due to elapsed time.
 - Use `--output-format stream-json` for anything non-trivial to watch turn-by-turn progress instead of guessing.
 - **Record each call's actuals** from the returned JSON (`duration_ms`, `duration_api_ms`, `num_turns`) and judge "stuck" against measured time, not gut feel.
 - Distinguish a real hang from normal slowness: a real hang is usually a **missing `-p`** (interactive REPL waiting on stdin) or a **tool awaiting a confirmation that was never granted** — not a long headless run.
 
-**Preflight runbook** for every headless call: pass `-p`; prefer `stream-json` above trivial; log prompt / resolved model / harness/provider / allowedTools / timeout / max-turns / input source; verify both CLI availability and authentication with a minimal completion for the selected model family; on failure record one normalized status (`partial`, `timeout`, `error_max_turns`, `startup_failure`, `auth`, `model-unavailable`, or `refusal`) and put details such as tool permission, stdin wait, or malformed JSON in its note; use these spellings consistently in checkpoints and user output; when retrying, **change exactly one variable at a time**. A route preflight is not passing merely because `--version` succeeds.
+**Preflight runbook** for every headless call: pass `-p`; prefer `stream-json` above trivial; log prompt / resolved model / harness/provider / allowedTools / timeout / max-turns / input source; verify both CLI availability and authentication with a minimal completion for the selected model family; on failure record one normalized status (`partial`, `timeout`, `error_max_turns`, `startup_failure`, `auth`, `model-unavailable`, or `refusal`) and put details such as tool permission, stdin wait, or malformed JSON in its note; use these spellings consistently in checkpoints and user output; when retrying, **change exactly one variable at a time**. A route preflight is not passing merely because `--version` succeeds. For `supervised_execution`, omit `--max-turns` and default wall-clock timeouts unless the user explicitly requested them; this mode's specific budget rule overrides the generic examples below.
 
 **Do not pin a specific model version** (e.g. a particular gpt/codex/claude build such as `gpt-5.2-codex`) unless you have confirmed the account can access it — prefer the default model. A rejected model override is `model-unavailable` (distinct from `auth`, where authentication itself is fine, and `refusal`, where the model declines to answer). If the orchestrator selected that optional pin, the one automatic retry may drop it and use the same harness/provider default; if the user or saved route selected it, stop and ask before changing models.
 
@@ -270,6 +284,7 @@ For non-trivial arenas, do **not** stop after one Claude Code call. Run at least
 - **Read back only a small structured summary, not free-form "the verdict" — and never `cat` the raw JSON.** Extract named fields so you can't accidentally compress away dissent: `recommendation`, `key_disagreements`, `uncertainties`, `what_would_change_mind`, `requested_evidence`, plus the raw-output **file path** as the source of truth. "Read back the verdict" alone is too lossy — it can drop exactly the minority view this skill exists to preserve (principle #6). The raw file stays the canonical record; your context holds only the structured digest.
 - **Persist a per-round checkpoint immediately after each external round** — not just the final conclusion. Store it at `.arena/runs/<run-id>/checkpoint.yaml` (or the host's equivalent durable project state), with `run_state ∈ {armed, in_progress, complete, abandoned, superseded}`, `commit_gate`, a copy of the saved `participant_route` and `participant_model_family`, and each round's `round`, `session_id`, raw-output path, `status`, `final`, structured digest, blockers, open disagreements, attempts, and retry fields. `status` is one of `substantive`, `partial`, `error_max_turns`, `startup_failure`, `timeout`, `model-unavailable`, `auth`, or `refusal`; `final: true` means the last planned round returned a substantive result, whether or not it found blockers. Set `run_state: complete` when `final: true`; record blockers separately in `blocking_findings`. A `partial` result may be useful evidence, but it is not completion: follow the automatic retry sequence above, then either obtain explicit user approval for any further retry or ask the user to abandon the run with the limitation recorded. A checkpoint is unfinished while `run_state: armed` or `in_progress`; it is finished with `run_state: complete`, `superseded`, or an explicit user decision to `abandoned`. Use `superseded` with `reason: stale` for stale checkpoints; `stale` is not a separate run state and is never resumable. Only `substantive` results count toward consensus or completion. A commit/push gate additionally requires a substantive result covering the complete set of pending changes, no blocking finding, and all separate user approvals; a partial, disputed, abandoned, or superseded run never unlocks it without a separate explicit user approval naming the limitation. Before any commit/push, verify that `.arena/` artifacts are ignored or stored outside the worktree and that none are staged. If compaction wipes your working memory, re-read the checkpoint and resume the same Arena; never infer completion from a missing answer. If later work changes the reviewed object, mark the checkpoint stale and start a new run rather than resuming it, except that an armed post-writing checkpoint remains valid until its trigger fires.
 - **Tools off by default for bounded, pre-scoped critique; open design/self-discovery still needs broad read-only tools + ample turns** (see the MODE section — do not let this rule starve an open review). Tool round-trips also get narrated back into your context, so for bounded critique prefer `--allowedTools ''` with the evidence pre-staged.
+- **Mode-specific completion exception:** for `supervised_execution`, a substantive final round or `final: true` does not set `run_state: complete`; only the mode-specific `final_approval_given` gate, exact `APPROVED: task complete` response, all required step passes, and user relay do. The generic round completion rule must not be applied to this mode.
 - **Large verdicts / many rounds:** keep each raw output in its own per-round archive file plus a small index; never reread the archive wholesale into context. If the session is already huge/dirty, start a fresh session carrying only the on-disk checkpoint forward, rather than fighting repeated compaction in place.
 
 When this skill runs inside **Claude Code**, use a saved `participant_route` or explicit one-run override first. Re-preflight the saved route on every run and verify its resolved model family still satisfies the saved heterogeneity constraint; a family change requires confirmation. Only when neither exists, propose Codex as the heterogeneous counterpart **if it is installed, authenticated, callable, and allowed by the sandbox/user**. As above, a local external CLI such as `codex` counts even when it is not exposed as an in-session agent tool.
@@ -422,6 +437,41 @@ Required flow:
 
 Do not phrase Claude Code's role only as “reviewer” unless the task is explicitly a review. Use roles such as `co-designer`, `architecture partner`, `interface critic`, `experiment co-planner`, or `implementation-plan collaborator`.
 
+## `supervised_execution` Mode
+
+Use this mode when the primary agent needs Arena to compensate for limited planning, verification, or task execution judgment. It is an **asymmetric supervisor-executor protocol**, not peer review: Arena plans, explains, and verifies; the primary agent executes and relays. The primary agent remains the only executor and user-facing relay. Arena does not receive implicit permission to run commands, write files, spend money, deploy, or expose data.
+
+### Complete-mode contract
+
+The primary agent forwards the user's request verbatim, adds the available relevant context and capability limits, and shows the user the selected mode, `open` or explicitly requested `bounded` shape, supervisor model, executor model, and budget policy before launch. Do not silently summarize away relevant context; privacy approval and secret redaction remain separate gates. Arena returns either a detailed user-facing answer marked `ANSWER_READY`, or an execution plan with the exact next instruction, success criteria, evidence requirements, risk level, rollback, and `PENDING: step verification`. Neither response is final approval. For an answer-only request, the primary returns the answer to Arena for a final check; Arena must then send the exact terminal signal `APPROVED: task complete`. After the final execution step is checked, Arena sends the same exact terminal signal. This signal is required on every completion path. Vague advice is not an executable instruction; if an instruction is ambiguous, the primary asks Arena rather than guessing.
+
+The primary executes **one Arena-authorized step at a time**, captures the exact command or action, exit status, stdout, stderr, diff or other relevant evidence, and factual observations, then sends that evidence back without replacing it with a success claim. Arena returns exactly one of:
+
+- `PASS` plus the next step or final review request;
+- `RETRY` plus a specific corrected instruction;
+- `BLOCKED` plus the cause, missing evidence or authorization, and user decision required;
+- `APPROVED: task complete` only after all required steps and final checks pass.
+
+The primary must not execute beyond the current instruction, skip evidence, infer approval from silence or a zero exit code, or report completion before the explicit approval signal is recorded. Preserve exact relevant command output and diffs; redact credentials and unrelated sensitive values before forwarding and mark each redaction. Human approval for privacy scope and irreversible actions remains separate and is never supplied by Arena implicitly. `awaiting_authorization` means waiting for the human to approve the named sensitive or irreversible action; Arena's `PASS` only authorizes the next protocol step and never replaces that human approval.
+
+### Lifecycle and checkpoint
+
+Persist a checkpoint after every transition. The answer-only path is `intake_forwarded → arena_analyzing → answer_ready → arena_checking → retry_required | blocked | final_approval_given → user_answer_forwarded`; a rejected answer returns to Arena through `retry_required` or stops as `blocked`. The execution path is `intake_forwarded → arena_analyzing → plan_ready → step_executing → evidence_returned → arena_checking → retry_required | blocked | next_step`; insert `awaiting_human_authorization` only when a named sensitive or irreversible action needs human approval, then continue to `step_executing`; a denied approval goes to `user_decision_required` and remains unfinished. Each `next_step` loops to the next `step_executing`; the last successful check goes to `final_approval_given → user_answer_forwarded`. A checkpoint records `mode`, `shape`, `user_request_verbatim` after approved secret redaction with redaction markers, `participant_route`, `participant_models`, `budget_policy` (`unlimited_default` or the exact user limit), `current_step`, per-step instruction and status, `retry_policy`, attempts, prior instruction/evidence fingerprint for loop detection, evidence path, Arena verification path, privacy and human approvals, `blocked_reason`, `final_approval_signal`, raw approval response path, `final_approval_source` (session and message/round), and timestamps. Reload it after compaction or `继续`; missing state never implies completion.
+
+For this mode, the general checkpoint rule `final: true` or `run_state: complete` after a substantive round is insufficient and is overridden: set `run_state: complete` only after `final_approval_given`, the exact terminal signal and its raw response/source are recorded, every required step passes, and the primary forwards Arena's final user-facing answer. A user-facing answer with no execution still goes through `answer_ready → final_approval_given` using the same exact signal.
+
+There is no default content, context, tool-discovery, Arena-turn, step-attempt, or elapsed-time budget. Only a limit explicitly requested by the user may impose one; record it and report any resulting coverage or completion impact. Do not turn the generic open-review `--max-turns` examples, 5–10 minute timeout, or convergence contract into limits for this mode. Monitor progress without cancelling a slow substantive response solely because it is slow, while still using the general missing-`-p`/permission-prompt checks to distinguish a real hang from normal slowness. If a call actually fails or times out, record that failure and use the existing lossless mechanical-call retry protocol; this one automatic mechanical retry is a liveness safeguard, not a user-selected budget, and any host hard timeout is an execution-environment limit to disclose rather than a mode policy. Step retries have no default numeric cap, but every retry must follow a new Arena instruction and account for new evidence or a changed condition; `retry_policy` records the user's limit when one exists, otherwise `unlimited_until_no_progress`. If the same instruction/evidence fingerprint repeats without progress, stop executing and ask Arena to re-plan. If a re-plan repeats the same fingerprint without progress again, stop and ask the user whether to continue or abandon; do not invent a numeric cap. Only Arena may return `BLOCKED`. `BLOCKED`, `partial`, `user_decision_required`, user abandonment, and genuine Arena unavailability are non-completion stops and must be reported as unfinished. A user-requested budget limit may stop the run as `partial`.
+
+### Complete-mode reporting
+
+Before launch:
+
+```text
+Arena: supervised_execution · <open|bounded> · object=<user request> · supervisor=<harness/provider/model> · executor=<current agent/model> · budget=<unlimited_default|exact user limit> · next=forward verbatim request and await Arena answer or plan
+```
+
+After each step, report the step status and whether Arena returned `PASS`, `RETRY`, `BLOCKED`, or `APPROVED: task complete`; checkpoint states use lowercase equivalents (`answer_ready`, `plan_ready`, `retry_required`, and so on). At close-out, use the standard execution summary and explicitly list the mode, shape, supervisor and executor models, successful steps, failed or recovered attempts with causes, unfinished work, and the exact final approval status. `APPROVED: task complete` is Arena's completion review, not evidence that an irreversible human action was authorized. A portable skill records the raw response and provenance but does not cryptographically attest that an agent has not fabricated its contents; do not claim a stronger guarantee than the host actually provides.
+
 ## `deliberative_analysis` Mode
 
 Use this mode when the main risk is **premature convergence, overconfidence, path dependence, or shallow A/B/A+B framing** during design analysis, experiment planning, architecture choice, product strategy, or research synthesis.
@@ -455,7 +505,26 @@ For research, factual, or technical claims, keep a compact ledger:
 
 ## Final Output Template
 
+Every Arena close-out, including an all-success run or an early stop, must start with an explicit execution summary in the user's language. Derive it from the round checkpoints and observed checks:
+
+- **Mode and participants:** report the mode actually used, its plain-language meaning, and `open` or `bounded`; include any change and reason. List the participating harnesses/providers and model identities with their verification status. If launch never happened, explicitly label the mode and participants as planned but not run.
+- **Succeeded:** name each participant/round or requested check that completed, its substantive result, and the supporting artifact or check. A successful preflight, process launch, or exit code alone does not establish review completion.
+- **Failed:** name each failed participant/round or check, its normalized failure type, the observed cause, and a redacted evidence reference. When the cause is unknown, say so and distinguish any hypothesis from the observation. Report failed attempts even after recovery, marking them as recovered and stating which retry succeeded.
+- **Unfinished / not run:** name partial results, missing checks, and skipped or blocked work, with the reason and the effect on the requested outcome. Do not count these as successes.
+- Write `None` explicitly for empty failure and unfinished categories. State the overall outcome as complete, partial, or failed; do not claim completion while required work is missing.
+- Separate execution from the review verdict: a substantive review that finds a blocker is a completed review with a blocking finding. Report that finding and the commit gate separately. Only substantive participant results may support agreement; preserve dissent.
+
 ```markdown
+## Execution Summary
+
+- Mode: <mode name; plain-language meaning; open/bounded; reason and any change>
+- Participants / models: <harness/provider; runtime-reported model or configured alias/unverified; ran or not run>
+- Overall: complete / partial / failed
+- Succeeded: <participant, round or check; result; evidence>
+- Failed: <item; failure type; observed cause or unknown; evidence; recovered or unresolved> / None
+- Unfinished / not run: <item; reason; effect on completion> / None
+- Review verdict / commit gate: <blocking findings, dissent, and gate status, when applicable>
+
 ## Recommendation
 
 ## Why
@@ -473,7 +542,7 @@ For research, factual, or technical claims, keep a compact ledger:
 ## Suggested Next Step
 ```
 
-If a cross-agent call failed or the arena ran degraded, you **must** end the user-facing output with this block — never silently swallow a failure, and always state whether to retry and the one thing to change. Use the same normalized failure labels as checkpoint `status` where possible (`partial`, `error_max_turns`, `startup_failure`, `timeout`, `model-unavailable`, `auth`, `refusal`); retain the more specific runtime cause as a note:
+If a cross-agent call failed (even if a later attempt recovered) or the arena ran degraded, end the user-facing output with this block in the user's language. It supplements the execution summary with the remaining impact and next action; reference already-listed causes instead of repeating long diagnostics. Always state whether another retry is needed and the one thing to change; for a recovered failure, state that no further retry is needed and what resolved it. Use the same normalized failure labels as checkpoint `status` where possible (`partial`, `error_max_turns`, `startup_failure`, `timeout`, `model-unavailable`, `auth`, `refusal`); retain the more specific runtime cause as a note:
 
 ```markdown
 ## Arena Limitations
@@ -624,6 +693,9 @@ Agent: OpenCode 预检通过，解析为 <configured default model>（<model fam
 - [ ] Mode was right-sized — escalated past quick_panel/solo when escalation triggers fired.
 - [ ] Cross-agent call timings/failures recorded; on failure, a retry recommendation was given to the user.
 - [ ] Any unavailable agents/tools are disclosed.
+- [ ] The final reply explicitly lists successes, failures with observed causes (including recovered attempts), and unfinished/not-run work; empty categories say None, and execution completion is separate from blocking findings or commit approval.
+- [ ] Both the launch notice and final reply name the mode, explain it briefly, state open/bounded, and identify the participant models without confusing planned calls or configured aliases with verified execution.
+- [ ] In `supervised_execution`, every required step pass and the exact final `APPROVED: task complete` response/source are recorded; answer-only requests also pass through final Arena checking.
 - [ ] Inferred intent and next action were stated before launch; participant setup was asked only once, after preflight (separate privacy and irreversible-action approvals still apply).
 - [ ] Every round has a status, and only `substantive` rounds count toward consensus or completion.
 - [ ] The selected persistent route was preflighted and persisted project-wide, or the one-run override was preflighted and recorded; neither was silently substituted.
