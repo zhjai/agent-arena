@@ -21,6 +21,36 @@ def terminal(**changes):
     return record
 
 
+class SafeIdTests(unittest.TestCase):
+    def test_accepts_allowed_punctuation(self):
+        value = "provider/model:release@2026.01+stable-id"
+        self.assertEqual(module.safe_id(value), value)
+
+    def test_enforces_length_boundary(self):
+        for length, expected in ((160, True), (161, False)):
+            with self.subTest(length=length):
+                value = "a" * length
+                if expected:
+                    self.assertEqual(module.safe_id(value), value)
+                else:
+                    self.assertIsNone(module.safe_id(value))
+
+    def test_rejects_non_string_values(self):
+        for value in (None, 1, True, {"id": "model"}, ["model"]):
+            with self.subTest(value=value):
+                self.assertIsNone(module.safe_id(value))
+
+    def test_rejects_provider_error_prose_and_whitespace(self):
+        for value in (
+            "provider returned an unexpected error",
+            " model-id",
+            "model-id ",
+            "model-id\nerror details",
+        ):
+            with self.subTest(value=value):
+                self.assertIsNone(module.safe_id(value))
+
+
 class ResultTests(unittest.TestCase):
     def inspect(self, *records, state="unknown", exit_code=None, pretty=False):
         with tempfile.TemporaryDirectory() as directory:
